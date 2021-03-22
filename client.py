@@ -14,6 +14,20 @@ def redrawWindow(win,player, player2):
     player2.draw(win)
     pygame.display.update()
 
+def get_player_move():
+    print("obtain")
+
+def display_players_cards():
+    print("display")
+
+def execute_player_turn():
+    print("execute")
+
+def draw_game_board():
+    print("draw")
+
+def notify_player_of_win():
+    print("notify")
 
 def main():
     run = True

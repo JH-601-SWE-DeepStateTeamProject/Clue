@@ -46,6 +46,30 @@ def threaded_client(conn, player):
     print("Lost connection")
     conn.close()
 
+def connect_players():
+    print("connect")
+
+def assign_player_roles():
+    print("assign")
+
+def assign_cards_to_role():
+    print("assign_role")
+
+def store_game_state():
+    print("store")
+
+def store_player_locations():
+    print("store_player")
+
+def player_guess_monitoring():
+    print("monitor")
+
+def organize_player_turns():
+    print("organize")
+
+def determine_game_winner():
+    print("determine")
+
 currentPlayer = 0
 while True:
     conn, addr = s.accept()
