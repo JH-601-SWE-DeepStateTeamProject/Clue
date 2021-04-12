@@ -3,7 +3,6 @@ import pygame as pg
 COLOR_INACTIVE = pg.Color('lightskyblue3')
 COLOR_ACTIVE = pg.Color('dodgerblue2')
 
-
 class InputBox:
 
     def __init__(self, x, y, w, h, font, text=''):

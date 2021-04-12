@@ -5,41 +5,34 @@ from InputBox import InputBox
 from clientNetwork import Network
 from Player import Player
 from Map import Map
+from ClueBoard import ClueBoard
 
 pygame.init()
 
-width = 500
-height = 900
+width = 800
+height = 1000
 dimension = 5
 sq_size = 100
 win = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Client")
 map = Map().map
-font = pygame.font.SysFont(pygame.font.get_default_font(), 48)
-input_box = InputBox(50, 650, 200, 48, font)
-output_box = InputBox(50, 800, 200, 48, font)
+font = pygame.font.SysFont("monospace", 30)
+input_box = InputBox(50, 750, 700, 48, font)
+output_box = InputBox(50, 900, 700, 48, font)
 
-
-def redraw_window(player, players=[]):
-    draw_game_board()
-    display_players_cards(player)
-    for p in players:
-        if isinstance(p, Player):
-            p.draw(win)
+def redraw_window(player, board):
+    board.draw(win)
+    display_players_cards(player, board)
     display_text_box()
     pygame.display.update()
 
 
-def get_player_move():
-    print("obtain")
-
-
-def display_players_cards(p):
-    pygame.draw.rect(win, pygame.Color("white"), pygame.Rect(0, 500, 500, 100))
+def display_players_cards(p, board):
+    pygame.draw.rect(win, pygame.Color("white"), pygame.Rect(0, 600, 800, 100))
     x = 10
-    y = 550
+    y = 650
     cardSize = 50
-    hand = p.hand
+    hand = board.Players[p].hand
     for card in hand:
         name = card.name
         img = font.render(name, True, pygame.Color("black"))
@@ -51,7 +44,7 @@ def display_players_cards(p):
 
 
 def display_text_box():
-    pygame.draw.rect(win, pygame.Color("white"), pygame.Rect(0, 600, 500, 300))
+    pygame.draw.rect(win, pygame.Color("white"), pygame.Rect(0, 700, 800, 300))
     input_box.draw(win)
     output_box.draw(win)
 
@@ -60,57 +53,68 @@ def execute_player_turn():
     print("execute")
 
 
-def draw_game_board():
-    colors = [pygame.Color("white"), pygame.Color("gray"), pygame.Color("black")]
-
-    for r in range(dimension):
-        for c in range(dimension):
-            square = map[r][c]
-            if square == "r":
-                color = colors[0]
-            elif square == "h":
-                color = colors[1]
-            else:
-                color = colors[2]
-            pygame.draw.rect(win, color, pygame.Rect(c * sq_size, r * sq_size, sq_size, sq_size))
-
-
 def notify_player_of_win():
     print("notify")
 
 
-def check_and_send_input(textInput, n):
+def check_and_send_card_input(textInput, n):
     if isinstance(textInput, str):
         if textInput != "":
             return n.send(Card(textInput))
 
 
-def update_board(p, players):
+def update_board(p, board):
     textInput = ""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            run = False
             pygame.quit()
         textInput = input_box.handle_event(event)
     input_box.update()
     output_box.update()
-    redraw_window(p, players)
+    redraw_window(p, board)
     return textInput
+
+def get_board_info(n):
+    return n.send("get_board")
+
+def check_and_make_board(new_player_info,old_player_info, board):
+    if new_player_info != old_player_info:
+        return ClueBoard(new_player_info)
+    else:
+        return board
+
+def get_player_move(input, p, board):
+    moveOptions = board.Players[p].get_possible_moves()
+    if input == "n" and input in moveOptions[0]:
+        newMove = moveOptions[1][moveOptions[0].index(input)]
+        return board.movePlayerInstance(board.Players[p],board.Rooms[newMove])
+    elif input == "w" and input in moveOptions[0]:
+        newMove = moveOptions[1][moveOptions[0].index(input)]
+        return board.movePlayerInstance(board.Players[p],board.Rooms[newMove])
+    elif input == "e" and input in moveOptions[0]:
+        newMove = moveOptions[1][moveOptions[0].index(input)]
+        return board.movePlayerInstance(board.Players[p],board.Rooms[newMove])
+    elif input == "s" and input in moveOptions[0]:
+        newMove = moveOptions[1][moveOptions[0].index(input)]
+        return board.movePlayerInstance(board.Players[p],board.Rooms[newMove])
 
 
 def main():
     run = True
     n = Network()
     p = n.getP()
-    players = n.send("start")
+    player_info = get_board_info(n)
+    Board = ClueBoard(player_info)
     clock = pygame.time.Clock()
-    redraw_window(p, players)
+    redraw_window(p, Board)
 
     while run:
         clock.tick(60)
-        players = n.send(p)
+        new_info = get_board_info(n)
+        Board = check_and_make_board(new_info,player_info, Board)
+        player_info = new_info
         message = n.send("get_state")
-        pygame.display.set_caption(message)  # need a better way to display the game state.
+        output_box.text = message  # need a better way to display the game state.
         if message == "disprove":
             suggestion = n.send("get_suggestion")
             output_box.text = "disprove " + suggestion[0].name
@@ -123,28 +127,29 @@ def main():
             n.send("change_turn")
         elif message == "game_over":
             output_box.text = n.send("get_message")
-        textInput = update_board(p, players)
+        textInput = update_board(p, Board)
         if message == "turn":
-            moved = p.move()
-            if moved:
-                if p.get_room() == "h":
-                    n.send("moved_hall")
-                else:
-                    n.send("moved_room")
+            if get_player_move(textInput, p, Board):
+                # Checks if in a hallway or not to tell server if it is going to make a suggestion or not. Need a better way to do this
+                newMessage = "moved_room"
+                if len(Board.Players[p].room) < 4:
+                    newMessage = "moved_hall"
+
+                n.send([Board.Players[p].create_player_obj(),newMessage])
         elif message == "suggestion":
-            check_and_send_input(textInput, n)
+            check_and_send_card_input(textInput, n)
         elif message == "disprove":
             flag = False
-            for card in p.hand:
+            for card in Board.Players[p].hand:
                 if card.name == suggestion[0].name:
                     flag = True
             if not flag:
                 n.send("unable_to_disprove")
                 output_box.text = "unable to disprove " + suggestion[0].name
             else:
-                check_and_send_input(textInput, n)
+                check_and_send_card_input(textInput, n)
         elif message == "assume":
-            check_and_send_input(textInput, n)
+            check_and_send_card_input(textInput, n)
 
 
 main()

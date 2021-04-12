@@ -2,7 +2,9 @@ import socket
 from _thread import *
 
 from Card import Card
+from ClueBoard import ClueBoard
 from Player import Player
+import pygame
 import pickle
 
 server = socket.gethostname()
@@ -15,17 +17,20 @@ try:
 except socket.error as e:
     str(e)
 
+# Hardcoding hands/answer for now
 answer = Card("11")
+hands = [[Card("1"),Card("2"),Card("3"),Card("4"),Card("5")],[Card("6"),Card("7"),Card("8"),Card("9"),Card("10")],[],[],[],[]]
 
 s.listen()
 print("Waiting for a connection, Server Started")
 
-players = [Player(0, 0, 50, 50, (255, 0, 0), ["1", "2", "3", "4", "5"]), Player(450, 450, 50, 50, (0, 0, 255), ["6", "7", "8", "9", "10"])]
-messages = ["turn", "wait"]
+messages = ["turn"]
 suggestion = []
 playerTurn = 0
 currentDisprover = 1
 outputAllMessage = ""
+pygame.init()
+Players = []
 
 
 def threaded_client(conn, player):
@@ -33,7 +38,8 @@ def threaded_client(conn, player):
     global currentDisprover
     global outputAllMessage
     global answer
-    conn.send(pickle.dumps(players[player]))
+    global Board
+    conn.send(pickle.dumps(player))
     turnCount = 0
     while True:
         try:
@@ -43,23 +49,15 @@ def threaded_client(conn, player):
             if not data:
                 print("Disconnected")
                 break
-
-            elif isinstance(data, Player):
-                players[player] = data
-                reply = players
-            elif data == "start":
-                reply = players
+            elif data == "get_board":
+                reply = Players
             elif data == "get_state":
                 reply = messages[player]
             elif data == "get_suggestion":
                 reply = suggestion
             elif data == "get_message":
                 reply = outputAllMessage
-            elif data == "moved_room":
-                messages[player] = "suggestion"
-            elif data == "moved_hall":
-                turnCount += 1
-                change_turn(player)
+
             elif data == "change_turn":
                 # Used to force assuming currently.
                 if turnCount == 3:
@@ -69,7 +67,7 @@ def threaded_client(conn, player):
                     change_turn(player)
 
             elif data == "unable_to_disprove":
-                currentDisprover = (currentDisprover + 1) % len(players)
+                currentDisprover = (currentDisprover + 1) % len(Players)
                 if currentDisprover == playerTurn:
                     messages[playerTurn] = "unable_to_disprove"
                     messages[player] = "wait"
@@ -79,9 +77,9 @@ def threaded_client(conn, player):
                     suggestion.clear()
                     suggestion.append(data)
                     messages[player] = "suggestion wait"
-                    messages[(player + 1) % len(players)] = "disprove"
+                    messages[(player + 1) % len(Players)] = "disprove"
                     reply = messages[player]
-                    currentDisprover = (player + 1) % len(players)
+                    currentDisprover = (player + 1) % len(Players)
 
                 elif messages[player] == "disprove":
                     if data.name == suggestion[0].name:
@@ -94,21 +92,19 @@ def threaded_client(conn, player):
                         outputAllMessage = "Player " + str(playerTurn + 1) + " wins! Answer: " + answer.name
                         for i in range(len(messages)):
                             messages[i] = "game_over"
-                        reply = [outputAllMessage] + players
+                        reply = [outputAllMessage] + Players
                     else:
                         outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed " + data.name
                         messages[player] = "guessed_wrong"
-                        reply = [outputAllMessage] + players
-
-            elif isinstance(data, Player):
-                players[player] = data
-                if (messages[player]) == "disprove":
-                    reply = [messages[player]] + suggestion + players
-                elif(messages[player]) == "disproved":
-                    reply = [messages[player]] + suggestion + players
-                else:
-                    reply = [messages[player]] + players
-
+                        reply = [outputAllMessage] + Players
+            elif isinstance(data[0], Player):
+                Players[player] = data[0]
+                if data[1] == "moved_room":
+                    messages[player] = "suggestion"
+                elif data[1] == "moved_hall":
+                    turnCount += 1
+                    change_turn(player)
+                reply = messages[player]
             conn.sendall(pickle.dumps(reply))
         except:
             break
@@ -121,9 +117,7 @@ def change_turn(playerNum):
     global playerTurn
     messages[playerNum] = "turn"
     messages.insert(0, messages.pop())
-    reply = [messages[playerNum]] + players
-    playerTurn = (playerTurn + 1) % len(players)
-    return reply
+    playerTurn = (playerTurn + 1) % len(Players)
 
 
 def connect_players():
@@ -157,11 +151,13 @@ def organize_player_turns():
 def determine_game_winner():
     print("determine")
 
-
 currentPlayer = 0
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
+    Players.append(Player(currentPlayer,currentPlayer,hands[currentPlayer]))
+    if currentPlayer != 0:
+        messages.append("wait")
 
     start_new_thread(threaded_client, (conn, currentPlayer))
     currentPlayer += 1
