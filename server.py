@@ -41,6 +41,9 @@ def threaded_client(conn, player):
     global Board
     conn.send(pickle.dumps(player))
     turnCount = 0
+    #Should have a seperate while loop here to hold players in a pregame state in order to properly randomize cards/starting positions
+
+    #The actual game runs in this while loop
     while True:
         try:
             data = pickle.loads(conn.recv(2048))
@@ -155,7 +158,7 @@ currentPlayer = 0
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
-    Players.append(Player(currentPlayer,currentPlayer,hands[currentPlayer]))
+    Players.append(Player(currentPlayer,currentPlayer*2,hands[currentPlayer]))
     if currentPlayer != 0:
         messages.append("wait")
 

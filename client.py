@@ -57,12 +57,13 @@ def notify_player_of_win():
     print("notify")
 
 
+#Sends text input to the server
 def check_and_send_card_input(textInput, n):
     if isinstance(textInput, str):
         if textInput != "":
             return n.send(Card(textInput))
 
-
+#Updates the board and pulls text input
 def update_board(p, board):
     textInput = ""
     for event in pygame.event.get():
@@ -83,6 +84,7 @@ def check_and_make_board(new_player_info,old_player_info, board):
     else:
         return board
 
+#Checks the inputted move vs possible moves
 def get_player_move(input, p, board):
     moveOptions = board.Players[p].get_possible_moves()
     if input == "n" and input in moveOptions[0]:
@@ -97,6 +99,8 @@ def get_player_move(input, p, board):
     elif input == "s" and input in moveOptions[0]:
         newMove = moveOptions[1][moveOptions[0].index(input)]
         return board.movePlayerInstance(board.Players[p],board.Rooms[newMove])
+    else:
+        return False
 
 
 def main():
@@ -110,11 +114,15 @@ def main():
 
     while run:
         clock.tick(60)
+
+        #Pulls the current player data from the server, checks for changes and updates the board if needed.
         new_info = get_board_info(n)
         Board = check_and_make_board(new_info,player_info, Board)
         player_info = new_info
+
+        #Pulls the current game state from server i.e. turn/suggestion/disprove. This needs a better way of displaying then current
         message = n.send("get_state")
-        output_box.text = message  # need a better way to display the game state.
+        output_box.text = message
         if message == "disprove":
             suggestion = n.send("get_suggestion")
             output_box.text = "disprove " + suggestion[0].name
@@ -127,7 +135,11 @@ def main():
             n.send("change_turn")
         elif message == "game_over":
             output_box.text = n.send("get_message")
+
+        #Updates the board and gets text input. The Board needs to be updated every loop
         textInput = update_board(p, Board)
+
+
         if message == "turn":
             if get_player_move(textInput, p, Board):
                 # Checks if in a hallway or not to tell server if it is going to make a suggestion or not. Need a better way to do this
@@ -140,6 +152,7 @@ def main():
             check_and_send_card_input(textInput, n)
         elif message == "disprove":
             flag = False
+            #Checks if the user is able to disprove the suggestion, and if they are unable immediately ends their disproving state
             for card in Board.Players[p].hand:
                 if card.name == suggestion[0].name:
                     flag = True
