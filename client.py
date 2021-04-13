@@ -123,7 +123,11 @@ def main():
 
         #Pulls the current game state from server i.e. turn/suggestion/disprove. This needs a better way of displaying then current
         message = n.send("get_state")
-        output_box.text = message
+        print(message)
+        if message != "wait":
+            output_box.text = message
+        elif output_box.text == "turn":
+            output_box.text = ""
         if message == "disprove":
             suggestion = n.send("get_suggestion")
             output_box.text = "disprove " + suggestion[0].name
