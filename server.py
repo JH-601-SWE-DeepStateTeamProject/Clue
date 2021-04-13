@@ -158,7 +158,7 @@ currentPlayer = 0
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
-    Players.append(Player(currentPlayer,currentPlayer*2,hands[currentPlayer]))
+    Players.append(Player(currentPlayer*2,currentPlayer,hands[currentPlayer]))
     if currentPlayer != 0:
         messages.append("wait")
 
