@@ -31,7 +31,7 @@ def display_players_cards(p, board):
     pygame.draw.rect(win, pygame.Color("white"), pygame.Rect(0, 600, 800, 100))
     x = 10
     y = 650
-    cardSize = 50
+    cardSize = 250
     hand = board.Players[p].hand
     for card in hand:
         name = card.name
@@ -107,6 +107,7 @@ def main():
     run = True
     n = Network()
     p = n.getP()
+    pygame.display.set_caption("Player " + str(p+1))
     player_info = get_board_info(n)
     Board = ClueBoard(player_info)
     clock = pygame.time.Clock()

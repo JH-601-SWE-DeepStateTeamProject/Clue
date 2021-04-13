@@ -1,11 +1,12 @@
 import socket
 from _thread import *
-
 from Card import Card
+from Deck import Deck
 from ClueBoard import ClueBoard
 from Player import Player
 import pygame
 import pickle
+import random
 
 server = socket.gethostname()
 port = 5555
@@ -18,8 +19,11 @@ except socket.error as e:
     str(e)
 
 # Hardcoding hands/answer for now
-answer = Card("11")
-hands = [[Card("1"),Card("2"),Card("3"),Card("4"),Card("5")],[Card("6"),Card("7"),Card("8"),Card("9"),Card("10")],[],[],[],[]]
+deck_obj = Deck()
+deck = deck_obj.weapons # + deck_obj.people + deck_obj.rooms
+random.shuffle(deck)
+
+answer = deck.pop()
 
 s.listen()
 print("Waiting for a connection, Server Started")
@@ -31,6 +35,7 @@ currentDisprover = 1
 outputAllMessage = ""
 pygame.init()
 Players = []
+hands = [[],[],[],[],[],[]]
 
 
 def threaded_client(conn, player):
@@ -131,8 +136,10 @@ def assign_player_roles():
     print("assign")
 
 
-def assign_cards_to_role():
-    print("assign_role")
+def assign_cards_to_role(currentPlayer, hands):
+    #hardcoding right now
+    hands[0] = [deck[0],deck[2],deck[4]]
+    hands[1] = [deck[1], deck[3]]
 
 
 def store_game_state():
@@ -158,6 +165,7 @@ currentPlayer = 0
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
+    assign_cards_to_role(currentPlayer,hands)
     Players.append(Player(currentPlayer*2,currentPlayer,hands[currentPlayer]))
     if currentPlayer != 0:
         messages.append("wait")
