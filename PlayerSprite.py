@@ -10,36 +10,44 @@ class PlayerSprite(pygame.sprite.Sprite):
         self.room = room
         self.surf = pygame.Surface((30, 30))
         self.hand = hand
+        self.charImage = None
         myfont = pygame.font.SysFont("monospace", 15)
 
         if (name == "PLUM"):
-            self.surf.fill((103, 58, 183))
-            self.label = myfont.render("P" + str(uniqueID), 1, (45, 0, 125))
+            #self.surf.fill((103, 58, 183))
+            #self.label = myfont.render("P" + str(uniqueID), 1, (45, 0, 125))
+            self.charImage = pygame.image.load(os.path.abspath("images/spr_plum.png"))
         elif (name == "GREEN"):
-            self.surf.fill((76, 175, 80))
-            self.label = myfont.render("P" + str(uniqueID), 1, (6, 95, 10))
+            #self.surf.fill((76, 175, 80))
+            #self.label = myfont.render("P" + str(uniqueID), 1, (6, 95, 10))
+            self.charImage = pygame.image.load(os.path.abspath("images/spr_green.png"))
         elif (name == "SCARLET"):
-            self.surf.fill((244, 67, 54))
-            self.label = myfont.render("P" + str(uniqueID), 1, (150, 13, 0))
+            #self.surf.fill((244, 67, 54))
+            #self.label = myfont.render("P" + str(uniqueID), 1, (150, 13, 0))
+            self.charImage = pygame.image.load(os.path.abspath("images/spr_scarlet.png"))
         elif (name == "MUSTARD"):
-            self.surf.fill((255, 193, 7))
-            self.label = myfont.render("P" + str(uniqueID), 1, (185, 123, 0))
+            #self.surf.fill((255, 193, 7))
+            #self.label = myfont.render("P" + str(uniqueID), 1, (185, 123, 0))
+            self.charImage = pygame.image.load(os.path.abspath("images/spr_mustard.png"))
         elif (name == "WHITE"):
-            self.surf.fill((250, 250, 250))
-            self.label = myfont.render("P" + str(uniqueID), 1, (160, 160, 160))
+            #self.surf.fill((250, 250, 250))
+            #self.label = myfont.render("P" + str(uniqueID), 1, (160, 160, 160))
+            self.charImage = pygame.image.load(os.path.abspath("images/spr_white.png"))
         elif (name == "PEACOCK"):
-            self.surf.fill((33, 150, 243))
-            self.label = myfont.render("P" + str(uniqueID), 1, (0, 100, 173))
+            #self.surf.fill((33, 150, 243))
+            #self.label = myfont.render("P" + str(uniqueID), 1, (0, 100, 173))
+            self.charImage = pygame.image.load(os.path.abspath("images/spr_peacock.png"))
         self.rect = self.surf.get_rect()
-        self.labelRect = self.label.get_rect()
-
+        #self.labelRect = self.label.get_rect()
+        self.charImage = pygame.transform.scale(self.charImage, (30, 30))
+        self.surf.blit(self.charImage, (0, 0))
         # for initial position only
         self.rect.y = 50 + (36 * uniqueID)
         self.rect.x = 50
 
     def draw(self, win):
         win.blit(self.surf, self.rect)
-        win.blit(self.label, [self.rect.x + 5, self.rect.y + 6])
+        #win.blit(self.label, [self.rect.x + 5, self.rect.y + 6])
 
     #Getting possible moves, not handling shortcuts right now.
     def get_possible_moves(self):
