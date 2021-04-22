@@ -7,6 +7,7 @@ class RoomSprite(pygame.sprite.Sprite):
         self.name = name
         self.playersInRoom = []
         self.label = None
+        self.roomImage = None
         myfont = pygame.font.SysFont("monospace", 15)
 
         if (name == "STUDY"):
@@ -186,7 +187,22 @@ class RoomSprite(pygame.sprite.Sprite):
             self.roomType = "TUNNEL"
 
         if (self.roomType == "ROOM"):
+            self.roomImage = pygame.image.load(os.path.abspath("images/room.png"))
+            self.roomImage = pygame.transform.scale(self.roomImage, (120,120))
             self.label = myfont.render(name.capitalize(), 1, (69, 90, 100))
+        elif (self.roomType == "TUNNEL"):
+            if (int(self.name[-1]) % 2) == 0:
+                self.roomImage = pygame.image.load(os.path.abspath("images/tunnel_left.png"))
+            else:
+                self.roomImage = pygame.image.load(os.path.abspath("images/tunnel_right.png"))
+            self.roomImage = pygame.transform.scale(self.roomImage, (40,40))
+        elif (self.roomType == "H_HALL"):
+            self.roomImage = pygame.image.load(os.path.abspath("images/hall_h.png"))
+            self.roomImage = pygame.transform.scale(self.roomImage, (80,40))
+        elif (self.roomType == "V_HALL"):
+            self.roomImage = pygame.image.load(os.path.abspath("images/hall_v.png"))
+            self.roomImage = pygame.transform.scale(self.roomImage, (40,80))
+        self.surf.blit(self.roomImage, (0, 0))
 
     # gives a position to players moving to this room
     def openPlacement(self):
