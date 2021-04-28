@@ -113,6 +113,18 @@ def get_player_move(input, p, board):
     elif input == "s" and input in moveOptions[0]:
         newMove = moveOptions[1][moveOptions[0].index(input)]
         return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
+    elif input == "sw" and input in moveOptions[0]:
+        newMove = moveOptions[1][moveOptions[0].index(input)]
+        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
+    elif input == "se" and input in moveOptions[0]:
+        newMove = moveOptions[1][moveOptions[0].index(input)]
+        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
+    elif input == "ne" and input in moveOptions[0]:
+        newMove = moveOptions[1][moveOptions[0].index(input)]
+        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
+    elif input == "nw" and input in moveOptions[0]:
+        newMove = moveOptions[1][moveOptions[0].index(input)]
+        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
     else:
         return False
 
@@ -181,8 +193,12 @@ def main():
                 n.send("unable_to_disprove")
                 output_box.text = "unable to disprove " + suggestion[0].name
             else:
+                if textInput == "" or textInput is None:
+                    textInput = wait_for_input()
                 check_and_send_card_input(textInput, n)
         elif message == "assume":
+            if textInput == "" or textInput is None:
+                textInput = wait_for_input()
             check_and_send_card_input(textInput, n)
 
 
