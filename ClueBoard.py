@@ -61,6 +61,11 @@ class ClueBoard:
             if characterObj.room == "INITIAL":
                 characterObj.room = ""
             else:
+                # checks if new room is a hallway and has a current player. Returns False if so
+                if newRoomObj.roomType == "H_HALL" or newRoomObj.roomType == "V_HALL":
+                    if len(newRoomObj.playersInRoom) > 0:
+                        return False
+
                 # remove the player from their old room
                 # iterate through rooms
                 for room in self.Rooms:
