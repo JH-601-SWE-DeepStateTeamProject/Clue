@@ -77,11 +77,11 @@ class PlayerSprite(pygame.sprite.Sprite):
         elif self.room == "H10":
             return [["n","s"],[12,20]]
         elif self.room == "STUDY":
-            return [["e","s"],[1,5]]
+            return [["e","s","se"],[1,5,10]]
         elif self.room == "HALL":
             return [["e","s","w"],[3,6,1]]
         elif self.room == "LOUNGE":
-            return [["w","s"],[3,7]]
+            return [["w","s","sw"],[3,7,10]]
         elif self.room == "LIBRARY":
             return [["n","e","s"],[5,9,13]]
         elif self.room == "BILLIARD":
@@ -89,11 +89,11 @@ class PlayerSprite(pygame.sprite.Sprite):
         elif self.room == "DINING":
             return [["w","s","n"],[11,7,15]]
         elif self.room == "CONSERVATORY":
-            return [["e","n"],[17,13]]
+            return [["e","n","ne"],[17,13,10]]
         elif self.room == "BALL":
             return [["e","n","w"],[19,14,17]]
         elif self.room == "KITCHEN":
-            return [["w","n"],[19,15]]
+            return [["w","n","nw"],[19,15,10]]
 
     def create_player_obj(self):
         return Player(self.get_room_num(),self.ID,self.hand)
