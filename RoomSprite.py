@@ -1,5 +1,6 @@
 import pygame
 import math
+import os
 
 class RoomSprite(pygame.sprite.Sprite):
     def __init__(self, name):
