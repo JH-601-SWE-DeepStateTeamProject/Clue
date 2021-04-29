@@ -1,8 +1,10 @@
+import pygame
+import os
 from RoomSprite import RoomSprite
 from PlayerSprite import PlayerSprite
 from Player import Player
 from Card import Card
-import pygame
+
 
 class ClueBoard:
     # clueboard contains all players, room, and cards
@@ -47,6 +49,7 @@ class ClueBoard:
 
             #Set cards based on given data
             self.Players[num].hand = player_obj.hand
+            self.Cards = player_obj.hand
 
 
 
@@ -84,3 +87,8 @@ class ClueBoard:
             room.draw(window)
         for player in self.Players:
             player.draw(window)
+        for idx, card in enumerate(self.Cards):
+            cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
+            cardImg = pygame.transform.scale(cardImg, (50,50))
+            yVal = 390 + (idx * 60)
+            window.blit(cardImg, (40,yVal))
