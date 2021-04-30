@@ -191,7 +191,7 @@ class RoomSprite(pygame.sprite.Sprite):
         if (self.roomType == "ROOM"):
             self.roomImage = pygame.image.load(os.path.abspath("images/room.png"))
             self.roomImage = pygame.transform.scale(self.roomImage, (120,120))
-            self.label = myfont.render(name.capitalize(), 1, (69, 90, 100))
+            self.label = myfont.render(name.capitalize(), 1, (255, 255, 255))
         elif (self.roomType == "TUNNEL"):
             if (int(self.name[-1]) % 2) == 0:
                 self.roomImage = pygame.image.load(os.path.abspath("images/tunnel_left.png"))

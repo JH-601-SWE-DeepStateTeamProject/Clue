@@ -6,6 +6,7 @@ from clientNetwork import Network
 from Player import Player
 from Map import Map
 from ClueBoard import ClueBoard
+from Button import Button
 
 pygame.init()
 
@@ -16,36 +17,39 @@ win = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Client")
 map = Map().map
 font = pygame.font.SysFont("monospace", 30)
-input_box = InputBox(50, 750, 700, 48, font)
 output_box = InputBox(50, 900, 700, 48, font)
+buttonColor = pygame.Color("grey")
+buttonStartX = 25
+buttonStartY = 600
+buttonW = 150
+buttonH = 50
+buttons = [Button(buttonColor, buttonStartX, buttonStartY, buttonW, buttonH),
+           Button(buttonColor, buttonStartX + 200, buttonStartY, buttonW, buttonH),
+           Button(buttonColor, buttonStartX + 400, buttonStartY, buttonW, buttonH),
+           Button(buttonColor, buttonStartX + 600, buttonStartY, buttonW, buttonH),
+           Button(buttonColor, buttonStartX, buttonStartY + 100, buttonW, buttonH),
+           Button(buttonColor, buttonStartX + 200, buttonStartY + 100, buttonW, buttonH),
+           Button(buttonColor, buttonStartX + 400, buttonStartY + 100, buttonW, buttonH),
+           Button(buttonColor, buttonStartX + 600, buttonStartY + 100, buttonW, buttonH)]
+buttonTitles = ['', '', '', '', '', '', '', '']
 
 
-def redraw_window(player, board):
+def redraw_window(board):
     board.draw(win)
-    display_players_cards(player, board)
     display_text_box()
+    display_buttons()
     pygame.display.update()
 
 
-def display_players_cards(p, board):
-    pygame.draw.rect(win, pygame.Color("white"), pygame.Rect(0, 600, 800, 100))
-    x = 10
-    y = 650
-    cardSize = 250
-    hand = board.Players[p].hand
-    for card in hand:
-        name = card.name
-        img = font.render(name, True, pygame.Color("black"))
-        win.blit(img, (x, y))
-        x += cardSize
-        if x >= width:
-            x = 10
-            y += cardSize
+def display_buttons():
+    pygame.draw.rect(win, pygame.Color("black"), pygame.Rect(0, 600, 800, 200))
+    for i in range(0, len(buttons)):
+        buttons[i].setText(buttonTitles[i])
+        buttons[i].draw(win)
 
 
 def display_text_box():
     pygame.draw.rect(win, pygame.Color("white"), pygame.Rect(0, 700, 800, 300))
-    input_box.draw(win)
     output_box.draw(win)
 
 
@@ -58,33 +62,39 @@ def notify_player_of_win():
 
 
 # Sends text input to the server
-def check_and_send_card_input(textInput, n):
-    if isinstance(textInput, str):
-        if textInput != "":
-            return n.send(Card(textInput))
+def check_and_send_card_input(cards, n):
+    for i in cards:
+        if not isinstance(i, Card):
+            return False
+    return n.send(cards)
 
 
 # Updates the board and pulls text input
-def update_board(p, board):
-    textInput = ""
+def update_board(board):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
-        textInput = input_box.handle_event(event)
-    input_box.update()
     output_box.update()
-    redraw_window(p, board)
-    return textInput
+    redraw_window(board)
 
 
-def wait_for_input():
-    textInput = ""
-    while (textInput == ""):
+def wait_for_button_press(board):
+    buttonTitlePressed = ""
+    while (buttonTitlePressed == ""):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-            textInput = input_box.handle_event(event)
-    return textInput
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                for button in buttons:
+                    if button.isOver(pygame.mouse.get_pos()):
+                        buttonTitlePressed = button.text
+                        if buttonTitlePressed == "Next...":
+                            set_button_titles_rooms_2(board)
+                            buttonTitlePressed = ""
+                        elif buttonTitlePressed == "Back...":
+                            set_button_titles_rooms_1(board)
+                            buttonTitlePressed = ""
+    return buttonTitlePressed
 
 
 def get_board_info(n):
@@ -101,51 +111,114 @@ def check_and_make_board(new_player_info, old_player_info, board):
 # Checks the inputted move vs possible moves
 def get_player_move(input, p, board):
     moveOptions = board.Players[p].get_possible_moves()
-    if input == "n" and input in moveOptions[0]:
-        newMove = moveOptions[1][moveOptions[0].index(input)]
-        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
-    elif input == "w" and input in moveOptions[0]:
-        newMove = moveOptions[1][moveOptions[0].index(input)]
-        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
-    elif input == "e" and input in moveOptions[0]:
-        newMove = moveOptions[1][moveOptions[0].index(input)]
-        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
-    elif input == "s" and input in moveOptions[0]:
-        newMove = moveOptions[1][moveOptions[0].index(input)]
-        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
-    elif input == "sw" and input in moveOptions[0]:
-        newMove = moveOptions[1][moveOptions[0].index(input)]
-        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
-    elif input == "se" and input in moveOptions[0]:
-        newMove = moveOptions[1][moveOptions[0].index(input)]
-        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
-    elif input == "ne" and input in moveOptions[0]:
-        newMove = moveOptions[1][moveOptions[0].index(input)]
-        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
-    elif input == "nw" and input in moveOptions[0]:
-        newMove = moveOptions[1][moveOptions[0].index(input)]
-        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
-    else:
-        return False
 
+    if input == "North":
+        newMove = moveOptions[1][moveOptions[0].index('n')]
+        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
+    elif input == "West":
+        newMove = moveOptions[1][moveOptions[0].index('w')]
+        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
+    elif input == "East":
+        newMove = moveOptions[1][moveOptions[0].index('e')]
+        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
+    elif input == "South":
+        newMove = moveOptions[1][moveOptions[0].index('s')]
+        return board.movePlayerInstance(board.Players[p], board.Rooms[newMove])
+    elif input == "Tunnel":
+        return board.movePlayerInstance(board.Players[p], board.Rooms[10])
+    return False
+
+
+def set_button_titles_for_move(p, board):
+    moveOptions = (board.Players[p].get_possible_moves())[0]
+    for i in range(len(buttonTitles)):
+        if i < len(moveOptions):
+            move = moveOptions[i]
+            if move == 'n':
+                buttonTitles[i] = "North"
+            elif move == 'w':
+                buttonTitles[i] = "West"
+            elif move == 's':
+                buttonTitles[i] = "South"
+            elif move == 'e':
+                buttonTitles[i] = "East"
+            else:
+                buttonTitles[i] = "Tunnel"
+        else:
+            buttonTitles[i] = ''
+    update_board(board)
+
+
+def set_button_titles_weapons(board):
+    weapons = ['Rope', 'Knife', 'Pipe', 'Candlestick', 'Revolver', 'Wrench', '', '']
+    for i in range(len(buttonTitles)):
+        buttonTitles[i] = weapons[i]
+    update_board(board)
+
+
+def set_button_titles_players(board):
+    players = ['Scarlet', 'Mustard', 'Green', 'Peacock', 'Plum', 'White', '', '']
+    for i in range(len(buttonTitles)):
+        buttonTitles[i] = players[i]
+    update_board(board)
+
+
+def set_button_titles_rooms_1(board):
+    rooms = ['Study', 'Hall', 'Lounge', 'Library', 'Billiard', 'Dining', 'Conservatory', 'Next...']
+    for i in range(len(buttonTitles)):
+        buttonTitles[i] = rooms[i]
+    update_board(board)
+
+
+def set_button_titles_rooms_2(board):
+    rooms = ['Ball', 'Kitchen', '', '', '', '', '', 'Back...']
+    for i in range(len(buttonTitles)):
+        buttonTitles[i] = rooms[i]
+    update_board(board)
+
+
+def clear_button_titles(board):
+    clearTitles = ['', '', '', '', '', '', '', '']
+    for i in range(len(buttonTitles)):
+        buttonTitles[i] = clearTitles[i]
+    update_board(board)
+
+
+def get_suggestion(p, board):
+    suggestion = [Card(board.Players[p].room.capitalize())]
+    print(suggestion)
+    set_button_titles_weapons(board)
+    print(buttonTitles)
+    suggestion.append(Card(wait_for_button_press(board)))
+    set_button_titles_players(board)
+    suggestion.append(Card(wait_for_button_press(board)))
+    return suggestion
+
+def get_assumption(board):
+    suggestion = []
+    set_button_titles_weapons(board)
+    suggestion.append(Card(wait_for_button_press(board)))
+    set_button_titles_players(board)
+    suggestion.append(Card(wait_for_button_press(board)))
+    set_button_titles_rooms_1(board)
+    suggestion.append(Card(wait_for_button_press(board)))
+    return suggestion
 
 def main():
     run = True
     n = Network()
-    p = n.getP()
+    p = n.getP()  # p is the index of the client's player object in the board array
     pygame.display.set_caption("Player " + str(p + 1))
     player_info = get_board_info(n)
     Board = ClueBoard(player_info)
     clock = pygame.time.Clock()
-    redraw_window(p, Board)
+    redraw_window(Board)
 
     while run:
         clock.tick(60)
 
-        # Pulls the current player data from the server, checks for changes and updates the board if needed.
-        new_info = get_board_info(n)
-        Board = check_and_make_board(new_info, player_info, Board)
-        player_info = new_info
+        clear_button_titles(Board)
+
 
         # Pulls the current game state from server i.e. turn/suggestion/disprove. This needs a better way of displaying then current
         message = n.send("get_state")
@@ -166,13 +239,17 @@ def main():
         elif message == "game_over":
             output_box.text = n.send("get_message")
 
+        # Pulls the current player data from the server, checks for changes and updates the board if needed.
+        new_info = get_board_info(n)
+        Board = check_and_make_board(new_info, player_info, Board)
+        player_info = new_info
         # Updates the board and gets text input. The Board needs to be updated every loop
-        textInput = update_board(p, Board)
+        update_board(Board)
 
         if message == "turn":
-            if textInput == "" or textInput is None:
-                textInput = wait_for_input()
-            if get_player_move(textInput, p, Board):
+            set_button_titles_for_move(p, Board)
+            buttonInput = wait_for_button_press(Board)
+            if get_player_move(buttonInput, p, Board):
                 # Checks if in a hallway or not to tell server if it is going to make a suggestion or not. Need a better way to do this
                 newMessage = "moved_room"
                 if len(Board.Players[p].room) < 4:
@@ -180,9 +257,8 @@ def main():
 
                 n.send([Board.Players[p].create_player_obj(), newMessage])
         elif message == "suggestion":
-            if textInput == "" or textInput is None:
-                textInput = wait_for_input()
-            check_and_send_card_input(textInput, n)
+            suggestion = get_suggestion(p, Board)
+            check_and_send_card_input(suggestion, n)
         elif message == "disprove":
             flag = False
             # Checks if the user is able to disprove the suggestion, and if they are unable immediately ends their disproving state
@@ -193,13 +269,12 @@ def main():
                 n.send("unable_to_disprove")
                 output_box.text = "unable to disprove " + suggestion[0].name
             else:
-                if textInput == "" or textInput is None:
-                    textInput = wait_for_input()
+                buttonInput = wait_for_button_press(Board)
+                check_and_send_card_input(buttonInput, n)
                 check_and_send_card_input(textInput, n)
         elif message == "assume":
-            if textInput == "" or textInput is None:
-                textInput = wait_for_input()
-            check_and_send_card_input(textInput, n)
+            assumption = get_assumption(board)
+            check_and_send_card_input(assumption, n)
 
 
 main()

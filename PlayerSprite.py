@@ -79,19 +79,19 @@ class PlayerSprite(pygame.sprite.Sprite):
         elif self.room == "STUDY":
             return [["e","s","se"],[1,5,10]]
         elif self.room == "HALL":
-            return [["e","s","w"],[3,6,1]]
+            return [["w","e","s"],[1,3,6]]
         elif self.room == "LOUNGE":
             return [["w","s","sw"],[3,7,10]]
         elif self.room == "LIBRARY":
             return [["n","e","s"],[5,9,13]]
         elif self.room == "BILLIARD":
-            return [["e","s","w","n"],[11,14,9,6]]
+            return [["w","n","e","s"],[9,6,11,14]]
         elif self.room == "DINING":
-            return [["w","s","n"],[11,7,15]]
+            return [["w","n","s"],[11,7,15]]
         elif self.room == "CONSERVATORY":
-            return [["e","n","ne"],[17,13,10]]
+            return [["n","e","ne"],[13,17,10]]
         elif self.room == "BALL":
-            return [["e","n","w"],[19,14,17]]
+            return [["w","n","e"],[17,14,19]]
         elif self.room == "KITCHEN":
             return [["w","n","nw"],[19,15,10]]
 

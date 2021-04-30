@@ -18,25 +18,19 @@ try:
 except socket.error as e:
     str(e)
 
-# Hardcoding hands/answer for now
-deck_obj = Deck()
-deck = deck_obj.weapons # + deck_obj.people + deck_obj.rooms
-random.shuffle(deck)
-
-answer = deck.pop()
-
 s.listen()
 print("Waiting for a connection, Server Started")
 
 messages = ["turn"]
 suggestion = []
+answer = []
 playerTurn = 0
 currentDisprover = 1
 outputAllMessage = ""
 pygame.init()
 Players = []
 hands = [[],[],[],[],[],[]]
-
+roomNums = [0,2,4,8,10,12,16,18,20]
 
 def threaded_client(conn, player):
     global playerTurn
@@ -79,17 +73,8 @@ def threaded_client(conn, player):
                 if currentDisprover == playerTurn:
                     messages[playerTurn] = "unable_to_disprove"
                     messages[player] = "wait"
-
             elif isinstance(data, Card):
-                if messages[player] == "suggestion":
-                    suggestion.clear()
-                    suggestion.append(data)
-                    messages[player] = "suggestion wait"
-                    messages[(player + 1) % len(Players)] = "disprove"
-                    reply = messages[player]
-                    currentDisprover = (player + 1) % len(Players)
-
-                elif messages[player] == "disprove":
+                if messages[player] == "disprove":
                     if data.name == suggestion[0].name:
                         messages[playerTurn] = "disproved"
                         messages[player] = "wait"
@@ -97,6 +82,25 @@ def threaded_client(conn, player):
 
                 elif messages[player] == "assume":
                     if data.name == answer.name:
+                        outputAllMessage = "Player " + str(playerTurn + 1) + " wins! Answer: " + answer.name
+                        for i in range(len(messages)):
+                            messages[i] = "game_over"
+                        reply = [outputAllMessage] + Players
+                    else:
+                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed " + data.name
+                        messages[player] = "guessed_wrong"
+                        reply = [outputAllMessage] + Players
+            elif isinstance(data[0], Card):
+                if messages[player] == "suggestion":
+                    suggestion.clear()
+                    for card in data:
+                        suggestion.append(card)
+                    messages[player] = "suggestion wait"
+                    messages[(player + 1) % len(Players)] = "disprove"
+                    reply = messages[player]
+                    currentDisprover = (player + 1) % len(Players)
+                elif messages[player] == "assume":
+                    if data[0].name == answer[0].name and data[1].name == answer[1].name and data[2].name == answer[2].name:
                         outputAllMessage = "Player " + str(playerTurn + 1) + " wins! Answer: " + answer.name
                         for i in range(len(messages)):
                             messages[i] = "game_over"
@@ -135,11 +139,30 @@ def connect_players():
 def assign_player_roles():
     print("assign")
 
+def setup_game():
+    random.shuffle(roomNums)
+    assign_cards_to_role()
 
-def assign_cards_to_role(currentPlayer, hands):
-    #hardcoding right now
-    hands[0] = [deck[0],deck[2],deck[4]]
-    hands[1] = [deck[1], deck[3]]
+#Should be run when game is started, randomizes deck, creates the answer and deals the cards
+def assign_cards_to_role():
+    deck_obj = Deck()
+    weapons = deck_obj.weapons  # + deck_obj.people + deck_obj.rooms
+    people = deck_obj.people
+    rooms = deck_obj.rooms
+    random.shuffle(weapons)
+    random.shuffle(people)
+    random.shuffle(rooms)
+    answer.clear()
+    answer.append(weapons.pop())
+    answer.append(people.pop())
+    answer.append(rooms.pop())
+    for i in hands:
+        i.clear()
+    deck = weapons #+ people + rooms
+    random.shuffle(deck)
+    for i in range(len(deck)):
+        hands[i % (currentPlayer + 1)].append(deck[i])
+
 
 
 def store_game_state():
@@ -161,12 +184,14 @@ def organize_player_turns():
 def determine_game_winner():
     print("determine")
 
+
 currentPlayer = 0
+setup_game()
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
-    assign_cards_to_role(currentPlayer,hands)
-    Players.append(Player(currentPlayer*2,currentPlayer,hands[currentPlayer]))
+    assign_cards_to_role()
+    Players.append(Player(roomNums[currentPlayer],currentPlayer,hands[currentPlayer]))
     if currentPlayer != 0:
         messages.append("wait")
 
