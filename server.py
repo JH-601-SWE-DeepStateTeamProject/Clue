@@ -31,6 +31,8 @@ pygame.init()
 Players = []
 hands = [[],[],[],[],[],[]]
 roomNums = [0,2,4,8,10,12,16,18,20]
+playerNames = ['Scarlet', 'Mustard', 'Green', 'Peacock', 'Plum', 'White']
+
 
 def threaded_client(conn, player):
     global playerTurn
@@ -73,6 +75,7 @@ def threaded_client(conn, player):
                 if currentDisprover == playerTurn:
                     messages[playerTurn] = "unable_to_disprove"
                     messages[player] = "wait"
+
             elif isinstance(data, Card):
                 if messages[player] == "disprove":
                     if data.name == suggestion[0].name:
@@ -80,20 +83,15 @@ def threaded_client(conn, player):
                         messages[player] = "wait"
                     reply = messages[player]
 
-                elif messages[player] == "assume":
-                    if data.name == answer.name:
-                        outputAllMessage = "Player " + str(playerTurn + 1) + " wins! Answer: " + answer.name
-                        for i in range(len(messages)):
-                            messages[i] = "game_over"
-                        reply = [outputAllMessage] + Players
-                    else:
-                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed " + data.name
-                        messages[player] = "guessed_wrong"
-                        reply = [outputAllMessage] + Players
             elif isinstance(data[0], Card):
                 if messages[player] == "suggestion":
                     suggestion.clear()
                     for card in data:
+
+                        # If the card is a player card and the player exists, move that player to the current players room.
+                        if card.name in playerNames:
+                            if playerNames.index(card.name) < len(Players):
+                                Players[playerNames.index(card.name)].room = Players[player].room
                         suggestion.append(card)
                     messages[player] = "suggestion wait"
                     messages[(player + 1) % len(Players)] = "disprove"

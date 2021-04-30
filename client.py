@@ -186,9 +186,7 @@ def clear_button_titles(board):
 
 def get_suggestion(p, board):
     suggestion = [Card(board.Players[p].room.capitalize())]
-    print(suggestion)
     set_button_titles_weapons(board)
-    print(buttonTitles)
     suggestion.append(Card(wait_for_button_press(board)))
     set_button_titles_players(board)
     suggestion.append(Card(wait_for_button_press(board)))
