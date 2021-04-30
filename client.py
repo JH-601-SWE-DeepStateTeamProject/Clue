@@ -273,7 +273,7 @@ def main():
                 check_and_send_card_input(buttonInput, n)
                 check_and_send_card_input(textInput, n)
         elif message == "assume":
-            assumption = get_assumption(board)
+            assumption = get_assumption(Board)
             check_and_send_card_input(assumption, n)
 
 
