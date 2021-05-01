@@ -78,9 +78,8 @@ def threaded_client(conn, player):
 
             elif isinstance(data, Card):
                 if messages[player] == "disprove":
-                    if data.name == suggestion[0].name:
-                        messages[playerTurn] = "disproved"
-                        messages[player] = "wait"
+                    messages[playerTurn] = "disproved with " + data.name
+                    messages[player] = "wait"
                     reply = messages[player]
 
             elif isinstance(data[0], Card):

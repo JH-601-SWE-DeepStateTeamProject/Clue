@@ -63,8 +63,12 @@ def notify_player_of_win():
 
 # Sends text input to the server
 def check_and_send_card_input(cards, n):
-    for i in cards:
-        if not isinstance(i, Card):
+    if isinstance(cards,list):
+        for i in cards:
+            if not isinstance(i, Card):
+                return False
+    else:
+        if not isinstance(cards, Card):
             return False
     return n.send(cards)
 
@@ -128,6 +132,13 @@ def get_player_move(input, p, board):
         return board.movePlayerInstance(board.Players[p], board.Rooms[10])
     return False
 
+def set_button_titles_disproving(board, newButtonTitles):
+    for i in range(0,7):
+        if i < len(newButtonTitles):
+            buttonTitles[i] = newButtonTitles[i]
+        else:
+            buttonTitles[i] = ""
+    update_board(board)
 
 def set_button_titles_for_move(p, board):
     moveOptions = (board.Players[p].get_possible_moves())[0]
@@ -230,9 +241,8 @@ def main():
         elif message == "unable_to_disprove":
             output_box.text = "unable to disprove"
             n.send("change_turn")
-        elif message == "disproved":
-            suggestion = n.send("get_suggestion")
-            output_box.text = "disproved " + suggestion[0].name
+        elif message.startswith("disproved"):
+            output_box.text = message
             n.send("change_turn")
         elif message == "game_over":
             output_box.text = n.send("get_message")
@@ -258,18 +268,20 @@ def main():
             suggestion = get_suggestion(p, Board)
             check_and_send_card_input(suggestion, n)
         elif message == "disprove":
-            flag = False
+            possibleDisproveCards = []
             # Checks if the user is able to disprove the suggestion, and if they are unable immediately ends their disproving state
-            for card in Board.Players[p].hand:
-                if card.name == suggestion[0].name:
-                    flag = True
-            if not flag:
+            for suggestedCard in suggestion:
+                for card in Board.Players[p].hand:
+                    if card.name == suggestedCard.name:
+                        possibleDisproveCards.append(card.name)
+            if len(possibleDisproveCards) == 0:
                 n.send("unable_to_disprove")
                 output_box.text = "unable to disprove " + suggestion[0].name
             else:
+                set_button_titles_disproving(Board, possibleDisproveCards)
                 buttonInput = wait_for_button_press(Board)
-                check_and_send_card_input(buttonInput, n)
-                check_and_send_card_input(textInput, n)
+
+                check_and_send_card_input(Card(buttonInput), n)
         elif message == "assume":
             assumption = get_assumption(Board)
             check_and_send_card_input(assumption, n)
