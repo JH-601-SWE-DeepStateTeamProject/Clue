@@ -75,6 +75,8 @@ def threaded_client(conn, player):
                 if currentDisprover == playerTurn:
                     messages[playerTurn] = "unable_to_disprove"
                     messages[player] = "wait"
+                else:
+                    messages[currentDisprover] = "disprove"
 
             elif isinstance(data, Card):
                 if messages[player] == "disprove":
@@ -107,7 +109,7 @@ def threaded_client(conn, player):
                         messages[player] = "guessed_wrong"
                         reply = [outputAllMessage] + Players
             elif isinstance(data[0], Player):
-                Players[player] = data[0]
+                Players[player].room = data[0].room
                 if data[1] == "moved_room":
                     messages[player] = "suggestion"
                 elif data[1] == "moved_hall":
@@ -159,6 +161,8 @@ def assign_cards_to_role():
     random.shuffle(deck)
     for i in range(len(deck)):
         hands[i % (currentPlayer + 1)].append(deck[i])
+    for i in range(len(Players)):
+        Players[i].hand = hands[i]
 
 
 

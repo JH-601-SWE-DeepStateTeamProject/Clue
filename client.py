@@ -105,9 +105,9 @@ def get_board_info(n):
     return n.send("get_board")
 
 
-def check_and_make_board(new_player_info, old_player_info, board):
+def check_and_make_board(new_player_info, old_player_info, board, p):
     if new_player_info != old_player_info:
-        return ClueBoard(new_player_info)
+        return ClueBoard(new_player_info, p)
     else:
         return board
 
@@ -219,7 +219,7 @@ def main():
     p = n.getP()  # p is the index of the client's player object in the board array
     pygame.display.set_caption("Player " + str(p + 1))
     player_info = get_board_info(n)
-    Board = ClueBoard(player_info)
+    Board = ClueBoard(player_info, p)
     clock = pygame.time.Clock()
     redraw_window(Board)
 
@@ -249,7 +249,7 @@ def main():
 
         # Pulls the current player data from the server, checks for changes and updates the board if needed.
         new_info = get_board_info(n)
-        Board = check_and_make_board(new_info, player_info, Board)
+        Board = check_and_make_board(new_info, player_info, Board, p)
         player_info = new_info
         # Updates the board and gets text input. The Board needs to be updated every loop
         update_board(Board)
