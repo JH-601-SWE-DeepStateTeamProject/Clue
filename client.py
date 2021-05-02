@@ -140,7 +140,7 @@ def set_button_titles_disproving(board, newButtonTitles):
             buttonTitles[i] = ""
     update_board(board)
 
-def set_button_titles_for_move(p, board):
+def set_button_titles_for_move(p, board, firstTurn):
     moveOptions = (board.Players[p].get_possible_moves())[0]
     for i in range(len(buttonTitles)):
         if i < len(moveOptions):
@@ -154,7 +154,10 @@ def set_button_titles_for_move(p, board):
             elif move == 'e':
                 buttonTitles[i] = "East"
             else:
-                buttonTitles[i] = "Tunnel"
+                if firstTurn:
+                    buttonTitles[i] = ''
+                else:
+                    buttonTitles[i] = "Tunnel"
         else:
             buttonTitles[i] = ''
     update_board(board)
@@ -214,6 +217,7 @@ def get_assumption(board):
     return suggestion
 
 def main():
+    firstTurn = True
     run = True
     n = Network()
     p = n.getP()  # p is the index of the client's player object in the board array
@@ -255,7 +259,8 @@ def main():
         update_board(Board)
 
         if message == "turn":
-            set_button_titles_for_move(p, Board)
+            set_button_titles_for_move(p, Board, firstTurn)
+            firstTurn = False
             buttonInput = wait_for_button_press(Board)
             if get_player_move(buttonInput, p, Board):
                 # Checks if in a hallway or not to tell server if it is going to make a suggestion or not. Need a better way to do this
