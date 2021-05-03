@@ -20,7 +20,7 @@ font = pygame.font.SysFont("monospace", 30)
 output_box = InputBox(50, 900, 700, 48, font)
 buttonColor = pygame.Color("grey")
 buttonStartX = 25
-buttonStartY = 600
+buttonStartY = 700
 buttonW = 150
 buttonH = 50
 buttons = [Button(buttonColor, buttonStartX, buttonStartY, buttonW, buttonH),
@@ -42,7 +42,7 @@ def redraw_window(board):
 
 
 def display_buttons():
-    pygame.draw.rect(win, pygame.Color("black"), pygame.Rect(0, 600, 800, 200))
+    pygame.draw.rect(win, pygame.Color("black"), pygame.Rect(0, buttonStartY, 800, 200))
     for i in range(0, len(buttons)):
         buttons[i].setText(buttonTitles[i])
         buttons[i].draw(win)
@@ -62,11 +62,12 @@ def notify_player_of_win():
 
 
 # Sends text input to the server
-def check_and_send_card_input(cards, n):
-    if isinstance(cards,list):
+def check_and_send_card_input(cards, n, isSuggestion):
+    if isinstance(cards, list):
         for i in cards:
             if not isinstance(i, Card):
                 return False
+        cards.append(isSuggestion)
     else:
         if not isinstance(cards, Card):
             return False
@@ -105,9 +106,9 @@ def get_board_info(n):
     return n.send("get_board")
 
 
-def check_and_make_board(new_player_info, old_player_info, board, p):
+def check_and_make_board(new_player_info, old_player_info, board, p, player_turn):
     if new_player_info != old_player_info:
-        return ClueBoard(new_player_info, p)
+        return ClueBoard(new_player_info, p, player_turn)
     else:
         return board
 
@@ -132,13 +133,15 @@ def get_player_move(input, p, board):
         return board.movePlayerInstance(board.Players[p], board.Rooms[10])
     return False
 
+
 def set_button_titles_disproving(board, newButtonTitles):
-    for i in range(0,7):
+    for i in range(0, 7):
         if i < len(newButtonTitles):
             buttonTitles[i] = newButtonTitles[i]
         else:
             buttonTitles[i] = ""
     update_board(board)
+
 
 def set_button_titles_for_move(p, board, firstTurn):
     moveOptions = (board.Players[p].get_possible_moves())[0]
@@ -191,6 +194,23 @@ def set_button_titles_rooms_2(board):
     update_board(board)
 
 
+def set_button_titles_turn_choice(board, move, suggestion, end_turn):
+    titles = []
+    if move:
+        titles.append("Move")
+    if suggestion:
+        titles.append("Make Suggestion")
+    if end_turn:
+        titles.append("End Turn")
+    titles.append("Make Assumption")
+    for i in range(len(buttonTitles)):
+        if i < len(titles):
+            buttonTitles[i] = titles[i]
+        else:
+            buttonTitles[i] = ""
+    update_board(board)
+
+
 def clear_button_titles(board):
     clearTitles = ['', '', '', '', '', '', '', '']
     for i in range(len(buttonTitles)):
@@ -206,6 +226,7 @@ def get_suggestion(p, board):
     suggestion.append(Card(wait_for_button_press(board)))
     return suggestion
 
+
 def get_assumption(board):
     suggestion = []
     set_button_titles_weapons(board)
@@ -216,14 +237,17 @@ def get_assumption(board):
     suggestion.append(Card(wait_for_button_press(board)))
     return suggestion
 
+
 def main():
     firstTurn = True
     run = True
+    lost = False
     n = Network()
     p = n.getP()  # p is the index of the client's player object in the board array
     pygame.display.set_caption("Player " + str(p + 1))
     player_info = get_board_info(n)
-    Board = ClueBoard(player_info, p)
+    player_turn = n.send("get_player_turn")
+    Board = ClueBoard(player_info, p, player_turn)
     clock = pygame.time.Clock()
     redraw_window(Board)
 
@@ -232,6 +256,8 @@ def main():
 
         clear_button_titles(Board)
 
+        player_turn = n.send("get_player_turn")
+        print(player_turn)
 
         # Pulls the current game state from server i.e. turn/suggestion/disprove. This needs a better way of displaying then current
         message = n.send("get_state")
@@ -253,25 +279,53 @@ def main():
 
         # Pulls the current player data from the server, checks for changes and updates the board if needed.
         new_info = get_board_info(n)
-        Board = check_and_make_board(new_info, player_info, Board, p)
+        Board = check_and_make_board(new_info, player_info, Board, p, player_turn)
         player_info = new_info
         # Updates the board and gets text input. The Board needs to be updated every loop
         update_board(Board)
 
-        if message == "turn":
-            set_button_titles_for_move(p, Board, firstTurn)
-            firstTurn = False
+        if message == "turn" or message == "suggestion" or message == "end_turn":
+            if message == "turn":
+                canSuggest = n.send("was_i_moved")
+                canMove = True # Do a check here
+                if canSuggest or canMove:
+                    canEnd = False
+                else:
+                    canEnd = True
+                set_button_titles_turn_choice(Board, canMove, canSuggest, canEnd)
+            elif message == "suggestion":
+                set_button_titles_turn_choice(Board, False, True, False)
+            elif message == "end_turn":
+                set_button_titles_turn_choice(Board, False, False, True)
             buttonInput = wait_for_button_press(Board)
-            if get_player_move(buttonInput, p, Board):
-                # Checks if in a hallway or not to tell server if it is going to make a suggestion or not. Need a better way to do this
-                newMessage = "moved_room"
-                if len(Board.Players[p].room) < 4:
-                    newMessage = "moved_hall"
-
-                n.send([Board.Players[p].create_player_obj(), newMessage])
-        elif message == "suggestion":
-            suggestion = get_suggestion(p, Board)
-            check_and_send_card_input(suggestion, n)
+            if buttonInput == "Move":
+                set_button_titles_for_move(p, Board, firstTurn)
+                firstTurn = False
+                buttonInput = wait_for_button_press(Board)
+                if get_player_move(buttonInput, p, Board):
+                    # Checks if in a hallway or not to tell server if it is going to make a suggestion or not. Need a
+                    # better way to do this
+                    if len(Board.Players[p].room) < 4:
+                        newMessage = "moved_hall"
+                    else:
+                        newMessage = "moved_room"
+                    n.send([Board.Players[p].create_player_obj(), newMessage])
+            elif buttonInput == "Make Suggestion":
+                suggestion = get_suggestion(p, Board)
+                check_and_send_card_input(suggestion, n, True)
+            elif buttonInput == "Make Assumption":
+                assumption = get_assumption(Board)
+                answer = check_and_send_card_input(assumption, n, False)
+                if isinstance(answer, list):
+                    if answer[0]:
+                        output_box.text = "Winner"
+                        # Winning stuff here
+                    else:
+                        output_box.text = "Loser"
+                        lost = True
+                        # Losing stuff here
+            elif buttonInput == "End Turn":
+                n.send("change_turn")
         elif message == "disprove":
             possibleDisproveCards = []
             # Checks if the user is able to disprove the suggestion, and if they are unable immediately ends their disproving state
@@ -286,10 +340,7 @@ def main():
                 set_button_titles_disproving(Board, possibleDisproveCards)
                 buttonInput = wait_for_button_press(Board)
 
-                check_and_send_card_input(Card(buttonInput), n)
-        elif message == "assume":
-            assumption = get_assumption(Board)
-            check_and_send_card_input(assumption, n)
+                check_and_send_card_input(Card(buttonInput), n, False)
 
 
 main()

@@ -30,6 +30,7 @@ outputAllMessage = ""
 pygame.init()
 Players = []
 hands = [[],[],[],[],[],[]]
+movedPlayers = [False, False, False, False, False, False] # Keeps track of players moved by suggestion
 roomNums = [0,2,4,8,10,12,16,18,20]
 playerNames = ['Scarlet', 'Mustard', 'Green', 'Peacock', 'Plum', 'White']
 
@@ -41,7 +42,6 @@ def threaded_client(conn, player):
     global answer
     global Board
     conn.send(pickle.dumps(player))
-    turnCount = 0
     #Should have a seperate while loop here to hold players in a pregame state in order to properly randomize cards/starting positions
 
     #The actual game runs in this while loop
@@ -61,14 +61,10 @@ def threaded_client(conn, player):
                 reply = suggestion
             elif data == "get_message":
                 reply = outputAllMessage
-
             elif data == "change_turn":
-                # Used to force assuming currently.
-                if turnCount == 3:
-                    messages[player] = "assume"
-                else:
-                    turnCount += 1
-                    change_turn(player)
+                change_turn(player)
+            elif data == "get_player_turn":
+                reply = playerTurn
 
             elif data == "unable_to_disprove":
                 currentDisprover = (currentDisprover + 1) % len(Players)
@@ -78,6 +74,9 @@ def threaded_client(conn, player):
                 else:
                     messages[currentDisprover] = "disprove"
 
+            elif data == "was_i_moved":
+                reply = movedPlayers[player]
+
             elif isinstance(data, Card):
                 if messages[player] == "disprove":
                     messages[playerTurn] = "disproved with " + data.name
@@ -85,36 +84,44 @@ def threaded_client(conn, player):
                     reply = messages[player]
 
             elif isinstance(data[0], Card):
-                if messages[player] == "suggestion":
+                isSuggestion = data.pop(3)
+
+                if isSuggestion:
+
                     suggestion.clear()
                     for card in data:
-
                         # If the card is a player card and the player exists, move that player to the current players room.
                         if card.name in playerNames:
                             if playerNames.index(card.name) < len(Players):
                                 Players[playerNames.index(card.name)].room = Players[player].room
+                                movedPlayers[playerNames.index(card.name)] = True
                         suggestion.append(card)
                     messages[player] = "suggestion wait"
                     messages[(player + 1) % len(Players)] = "disprove"
                     reply = messages[player]
                     currentDisprover = (player + 1) % len(Players)
-                elif messages[player] == "assume":
+                else:
                     if data[0].name == answer[0].name and data[1].name == answer[1].name and data[2].name == answer[2].name:
                         outputAllMessage = "Player " + str(playerTurn + 1) + " wins! Answer: " + answer.name
                         for i in range(len(messages)):
                             messages[i] = "game_over"
-                        reply = [outputAllMessage] + Players
+                        reply = answer
+                        reply.insert(0, True)
                     else:
-                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed " + data.name
+                        answer = ""
+                        for card in data:
+                            answer += card.name + " "
+                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed " + answer
                         messages[player] = "guessed_wrong"
-                        reply = [outputAllMessage] + Players
+                        reply = answer
+                        reply.insert(0, False)
             elif isinstance(data[0], Player):
                 Players[player].room = data[0].room
+                movedPlayers[player] = False
                 if data[1] == "moved_room":
                     messages[player] = "suggestion"
                 elif data[1] == "moved_hall":
-                    turnCount += 1
-                    change_turn(player)
+                    messages[player] = "end_turn"
                 reply = messages[player]
             conn.sendall(pickle.dumps(reply))
         except:
@@ -163,7 +170,8 @@ def assign_cards_to_role():
         hands[i % (currentPlayer + 1)].append(deck[i])
     for i in range(len(Players)):
         Players[i].hand = hands[i]
-
+    for i in answer:
+        print(i.name)
 
 
 def store_game_state():

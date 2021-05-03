@@ -11,8 +11,9 @@ class ClueBoard:
     Players = []
     Rooms = []
     Cards = []  # not yet implemented
+    player_turn = 0
 
-    def __init__(self, PlayerData, pNum):
+    def __init__(self, PlayerData, pNum, player_turn):
         # initialize rooms. hardcoded because the rooms do not change
         # tunnels also handled as room objects for now - this implementation may need to be changed in future
         self.Rooms.extend(
@@ -38,7 +39,7 @@ class ClueBoard:
         self.Players.append(p5)
         p6 = PlayerSprite("WHITE", "INITIAL", 6, [])
         self.Players.append(p6)
-
+        self.player_turn = player_turn
         self.set_data(PlayerData, pNum)
 
     def set_data(self, PlayerData, pNum):
@@ -97,3 +98,8 @@ class ClueBoard:
             cardImg = pygame.transform.scale(cardImg, (50,50))
             yVal = 390 + (idx * 60)
             window.blit(cardImg, (40,yVal))
+        for i in range(6):
+            if i == self.player_turn:
+                pygame.draw.rect(window, pygame.Color("green"), pygame.Rect(48, 86 + (i * 36), 2, 30))
+            else:
+                pygame.draw.rect(window, pygame.Color("black"), pygame.Rect(48, 86 + (i * 36), 2, 30))
