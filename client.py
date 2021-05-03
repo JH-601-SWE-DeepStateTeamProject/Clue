@@ -297,7 +297,7 @@ def main():
                     canEnd = True
                 set_button_titles_turn_choice(Board, canMove, canSuggest, canEnd)
             elif message == "suggestion":
-                set_button_titles_turn_choice(Board, False, True, False)
+                set_button_titles_turn_choice(Board, False, True, True)
             elif message == "end_turn":
                 set_button_titles_turn_choice(Board, False, False, True)
             buttonInput = wait_for_button_press(Board)

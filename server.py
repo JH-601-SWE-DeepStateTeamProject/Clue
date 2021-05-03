@@ -33,6 +33,7 @@ hands = [[],[],[],[],[],[]]
 movedPlayers = [False, False, False, False, False, False] # Keeps track of players moved by suggestion
 roomNums = [0,2,4,8,10,12,16,18,20]
 playerNames = ['Scarlet', 'Mustard', 'Green', 'Peacock', 'Plum', 'White']
+incorrectGuess = []
 
 
 def threaded_client(conn, player):
@@ -62,12 +63,13 @@ def threaded_client(conn, player):
             elif data == "get_message":
                 reply = outputAllMessage
             elif data == "change_turn":
+                movedPlayers[player] = False
                 change_turn(player)
             elif data == "get_player_turn":
                 reply = playerTurn
 
             elif data == "unable_to_disprove":
-                currentDisprover = (currentDisprover + 1) % len(Players)
+                currentDisprover = (currentDisprover + 1) % currentPlayer
                 if currentDisprover == playerTurn:
                     messages[playerTurn] = "unable_to_disprove"
                     messages[player] = "wait"
@@ -90,34 +92,34 @@ def threaded_client(conn, player):
 
                     suggestion.clear()
                     for card in data:
-                        # If the card is a player card and the player exists, move that player to the current players room.
+                        # If the card is a player card, move that player to the current players room.
                         if card.name in playerNames:
-                            if playerNames.index(card.name) < len(Players):
-                                Players[playerNames.index(card.name)].room = Players[player].room
-                                movedPlayers[playerNames.index(card.name)] = True
+                            Players[playerNames.index(card.name)].room = Players[player].room
+                            movedPlayers[playerNames.index(card.name)] = True
                         suggestion.append(card)
                     messages[player] = "suggestion wait"
-                    messages[(player + 1) % len(Players)] = "disprove"
+                    messages[(player + 1) % currentPlayer] = "disprove"
                     reply = messages[player]
-                    currentDisprover = (player + 1) % len(Players)
+                    currentDisprover = (player + 1) % currentPlayer
                 else:
                     if data[0].name == answer[0].name and data[1].name == answer[1].name and data[2].name == answer[2].name:
-                        outputAllMessage = "Player " + str(playerTurn + 1) + " wins! Answer: " + answer.name
+                        outputAllMessage = "Player " + str(playerTurn + 1) + " wins!"
                         for i in range(len(messages)):
                             messages[i] = "game_over"
                         reply = answer
                         reply.insert(0, True)
                     else:
-                        answer = ""
+                        incorrectGuess.clear()
                         for card in data:
-                            answer += card.name + " "
-                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed " + answer
+                            incorrectGuess.append(card)
+                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses."
                         messages[player] = "guessed_wrong"
+                        change_turn(player)
                         reply = answer
                         reply.insert(0, False)
+
             elif isinstance(data[0], Player):
                 Players[player].room = data[0].room
-                movedPlayers[player] = False
                 if data[1] == "moved_room":
                     messages[player] = "suggestion"
                 elif data[1] == "moved_hall":
@@ -135,7 +137,7 @@ def change_turn(playerNum):
     global playerTurn
     messages[playerNum] = "turn"
     messages.insert(0, messages.pop())
-    playerTurn = (playerTurn + 1) % len(Players)
+    playerTurn = (playerTurn + 1) % currentPlayer
 
 
 def connect_players():
@@ -147,7 +149,10 @@ def assign_player_roles():
 
 def setup_game():
     random.shuffle(roomNums)
+    for i in range(6):
+        Players.append(Player(roomNums[i], i, []))
     assign_cards_to_role()
+
 
 #Should be run when game is started, randomizes deck, creates the answer and deals the cards
 def assign_cards_to_role():
@@ -167,9 +172,11 @@ def assign_cards_to_role():
     deck = weapons #+ people + rooms
     random.shuffle(deck)
     for i in range(len(deck)):
-        hands[i % (currentPlayer + 1)].append(deck[i])
-    for i in range(len(Players)):
+        if currentPlayer != 0:
+            hands[i % currentPlayer].append(deck[i])
+    for i in range(currentPlayer):
         Players[i].hand = hands[i]
+        print(Players[i].hand)
     for i in answer:
         print(i.name)
 
@@ -199,10 +206,8 @@ setup_game()
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
-    assign_cards_to_role()
-    Players.append(Player(roomNums[currentPlayer],currentPlayer,hands[currentPlayer]))
     if currentPlayer != 0:
         messages.append("wait")
-
-    start_new_thread(threaded_client, (conn, currentPlayer))
     currentPlayer += 1
+    assign_cards_to_role()
+    start_new_thread(threaded_client, (conn, currentPlayer-1))
