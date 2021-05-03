@@ -285,9 +285,12 @@ def main():
         update_board(Board)
 
         if message == "turn" or message == "suggestion" or message == "end_turn":
+            if lost:
+                n.send("change_turn")
+                continue
             if message == "turn":
                 canSuggest = n.send("was_i_moved")
-                canMove = True # Do a check here
+                canMove = Board.canIMove(p, firstTurn)
                 if canSuggest or canMove:
                     canEnd = False
                 else:
