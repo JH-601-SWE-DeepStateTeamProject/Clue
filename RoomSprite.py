@@ -226,4 +226,4 @@ class RoomSprite(pygame.sprite.Sprite):
 
     def draw(self, win):
         win.blit(self.surf, self.rect)
-        #removed label as it is now included in room image
+		

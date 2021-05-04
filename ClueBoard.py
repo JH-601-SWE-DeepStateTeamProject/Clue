@@ -11,8 +11,9 @@ class ClueBoard:
     Players = []
     Rooms = []
     Cards = []  # not yet implemented
+    player_turn = 0
 
-    def __init__(self, PlayerData, pNum):
+    def __init__(self, PlayerData, pNum, player_turn):
         # initialize rooms. hardcoded because the rooms do not change
         # tunnels also handled as room objects for now - this implementation may need to be changed in future
         self.Rooms.extend(
@@ -38,20 +39,19 @@ class ClueBoard:
         self.Players.append(p5)
         p6 = PlayerSprite("WHITE", "INITIAL", 6, [])
         self.Players.append(p6)
-
+        self.player_turn = player_turn
         self.set_data(PlayerData, pNum)
 
     def set_data(self, PlayerData, pNum):
         for num in range(len(PlayerData)):
-            #Change room based on given data
+            # Change room based on given data
             player_obj = PlayerData[num]
-            self.movePlayerInstance(self.Players[num],self.Rooms[player_obj.room])
+            self.movePlayerInstance(self.Players[num], self.Rooms[player_obj.room])
 
-            #Set cards based on given data
+            # Set cards based on given data
             self.Players[num].hand = player_obj.hand
             if num == pNum:
                 self.Cards = player_obj.hand
-
 
     # pass in room and player to update
     def movePlayerInstance(self, characterObj, newRoomObj):
@@ -96,10 +96,49 @@ class ClueBoard:
         cardBackground = pygame.image.load('images/cardUI.png')
         window.blit(cardBackground, (690,40))
         for idx, card in enumerate(self.Cards):
+
             #the image loads from the name of the card. all cards are in the format: images/card_%NAMEOFCARD%.png ..... eg: card_billiard.png, card_knife.png, card_mustard.png
             #so the var loadNameStr just needs to contain the name of the character, weapon, or room: eg) billiard, knife, mustard. it is automatically sent to lowercase to match file name
             loadNameStr = (card.name).lower()
-            cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
-            cardImg = pygame.transform.scale(cardImg, (70,40))
-            yVal = 82 + (idx * 53)
-            window.blit(cardImg, (695,yVal))
+			if os.path.exists("images/" + card.name + ".png"):
+				cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
+				cardImg = pygame.transform.scale(cardImg, (70,40))
+				yVal = 82 + (idx * 53)
+				window.blit(cardImg, (695,yVal))
+				
+        for i in range(6):
+            if i == self.player_turn:
+                pygame.draw.rect(window, pygame.Color("green"), pygame.Rect(48, 86 + (i * 36), 2, 30))
+            else:
+                pygame.draw.rect(window, pygame.Color("black"), pygame.Rect(48, 86 + (i * 36), 2, 30))
+
+    def canIMove(self, p, firstMove):
+        room = self.Players[p].room
+        hallsToCheck = []
+        # Hardcoding this because it can only happen in set scenarios
+        if room == "HALL":
+            hallsToCheck = [self.Rooms[1], self.Rooms[3], self.Rooms[6]]
+        elif room == "LIBRARY":
+            hallsToCheck = [self.Rooms[5], self.Rooms[9], self.Rooms[13]]
+        elif room == "BILLIARD":
+            hallsToCheck = [self.Rooms[6], self.Rooms[9], self.Rooms[11], self.Rooms[14]]
+        elif room == "DINING":
+            hallsToCheck = [self.Rooms[7], self.Rooms[11], self.Rooms[15]]
+        elif room == "BALL":
+            hallsToCheck = [self.Rooms[14], self.Rooms[17], self.Rooms[19]]
+        elif firstMove:
+            if room == "STUDY":
+                hallsToCheck = [self.Rooms[1], self.Rooms[5]]
+            elif room == "LOUNGE":
+                hallsToCheck = [self.Rooms[3], self.Rooms[7]]
+            elif room == "CONSERVATORY":
+                hallsToCheck = [self.Rooms[13], self.Rooms[17]]
+            elif room == "KITCHEN":
+                hallsToCheck = [self.Rooms[15], self.Rooms[19]]
+        else:
+            return True
+        for room in hallsToCheck:
+            if len(room.playersInRoom) == 0:
+                return True
+        return False
+		
