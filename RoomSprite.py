@@ -8,7 +8,6 @@ class RoomSprite(pygame.sprite.Sprite):
         super(RoomSprite, self).__init__()
         self.name = name
         self.playersInRoom = []
-        self.label = None
         self.roomImage = None
         myfont = pygame.font.SysFont("monospace", 15)
 
@@ -19,6 +18,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 140
             self.rect.y = 40
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/study_room.png"))
         elif (name == "TUNNEL1"):
             self.surf = pygame.Surface((40, 40))
             self.surf.fill((207, 216, 220))
@@ -40,6 +40,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 340
             self.rect.y = 40
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/hall_room.png"))
         elif (name == "H2"):
             self.surf = pygame.Surface((80, 40))
             self.surf.fill((96, 125, 139))
@@ -54,6 +55,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 540
             self.rect.y = 40
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/lounge_room.png"))
         elif (name == "TUNNEL2"):
             self.surf = pygame.Surface((40, 40))
             self.surf.fill((207, 216, 220))
@@ -89,6 +91,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 140
             self.rect.y = 240
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/library_room.png"))
         elif (name == "H6"):
             self.surf = pygame.Surface((80, 40))
             self.surf.fill((96, 125, 139))
@@ -103,6 +106,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 340
             self.rect.y = 240
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/billiard_room.png"))
         elif (name == "H7"):
             self.surf = pygame.Surface((80, 40))
             self.surf.fill((96, 125, 139))
@@ -117,6 +121,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 540
             self.rect.y = 240
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/dining_room.png"))
         elif (name == "H8"):
             self.surf = pygame.Surface((40, 80))
             self.surf.fill((96, 125, 139))
@@ -145,6 +150,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 140
             self.rect.y = 440
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/conservatory_room.png"))
         elif (name == "TUNNEL3"):
             self.surf = pygame.Surface((40, 40))
             self.surf.fill((207, 216, 220))
@@ -166,6 +172,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 340
             self.rect.y = 440
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/ball_room.png"))
         elif (name == "H12"):
             self.surf = pygame.Surface((80, 40))
             self.surf.fill((96, 125, 139))
@@ -180,6 +187,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.rect.x = 540
             self.rect.y = 440
             self.roomType = "ROOM"
+            self.roomImage = pygame.image.load(os.path.abspath("images/kitchen_room.png"))
         elif (name == "TUNNEL4"):
             self.surf = pygame.Surface((40, 40))
             self.surf.fill((207, 216, 220))
@@ -189,9 +197,7 @@ class RoomSprite(pygame.sprite.Sprite):
             self.roomType = "TUNNEL"
 
         if (self.roomType == "ROOM"):
-            self.roomImage = pygame.image.load(os.path.abspath("images/room.png"))
             self.roomImage = pygame.transform.scale(self.roomImage, (120,120))
-            self.label = myfont.render(name.capitalize(), 1, (255, 255, 255))
         elif (self.roomType == "TUNNEL"):
             if (int(self.name[-1]) % 2) == 0:
                 self.roomImage = pygame.image.load(os.path.abspath("images/tunnel_left.png"))
@@ -220,5 +226,4 @@ class RoomSprite(pygame.sprite.Sprite):
 
     def draw(self, win):
         win.blit(self.surf, self.rect)
-        if (self.label != None):
-            win.blit(self.label, [self.rect.x + (self.rect.width / 2) - (self.label.get_width() / 2), self.rect.y + (self.rect.width / 2) - (self.label.get_height() / 2)])
+        #removed label as it is now included in room image
