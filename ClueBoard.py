@@ -96,16 +96,16 @@ class ClueBoard:
         cardBackground = pygame.image.load('images/cardUI.png')
         window.blit(cardBackground, (690,40))
         for idx, card in enumerate(self.Cards):
+            if idx < 9:
+                #the image loads from the name of the card. all cards are in the format: images/card_%NAMEOFCARD%.png ..... eg: card_billiard.png, card_knife.png, card_mustard.png
+                #so the var loadNameStr just needs to contain the name of the character, weapon, or room: eg) billiard, knife, mustard. it is automatically sent to lowercase to match file name
+                loadNameStr = (card.name).lower()
+                if os.path.exists("images/card_" + loadNameStr + ".png"):
+                    cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
+                    cardImg = pygame.transform.scale(cardImg, (70,40))
+                    yVal = 82 + (idx * 53)
+                    window.blit(cardImg, (695,yVal))
 
-            #the image loads from the name of the card. all cards are in the format: images/card_%NAMEOFCARD%.png ..... eg: card_billiard.png, card_knife.png, card_mustard.png
-            #so the var loadNameStr just needs to contain the name of the character, weapon, or room: eg) billiard, knife, mustard. it is automatically sent to lowercase to match file name
-            loadNameStr = (card.name).lower()
-			if os.path.exists("images/" + card.name + ".png"):
-				cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
-				cardImg = pygame.transform.scale(cardImg, (70,40))
-				yVal = 82 + (idx * 53)
-				window.blit(cardImg, (695,yVal))
-				
         for i in range(6):
             if i == self.player_turn:
                 pygame.draw.rect(window, pygame.Color("green"), pygame.Rect(48, 86 + (i * 36), 2, 30))
@@ -141,4 +141,3 @@ class ClueBoard:
             if len(room.playersInRoom) == 0:
                 return True
         return False
-		

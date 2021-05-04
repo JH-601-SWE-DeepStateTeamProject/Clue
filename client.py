@@ -47,26 +47,29 @@ def display_outputall_message(message, cards=[]):
     rect.y = 600
     label = font.render(message, 1, (255, 255, 255))
     win.blit(surf, rect)
-    win.blit(label, [rect.x + (rect.width / 2) - ((label.get_width() + (len(cards) * 60)) / 2),
+    win.blit(label, [rect.x + (rect.width / 2) - ((label.get_width() + (len(cards) * 80)) / 2),
                      rect.y + (rect.height / 2) - (label.get_height() / 2)])
 
 
     for idx, card in enumerate(cards):
         if isinstance(card,Card):
-            if os.path.exists("images/" + card.name + ".png"):
-                cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
+            loadNameStr = (card.name).lower()
+            if os.path.exists("images/card_" + loadNameStr + ".png"):
+                cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
                 cardImg = pygame.transform.scale(cardImg, (70, 40))
                 yVal = rect.y + 5
                 xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (
                         len(cards) * 80) + (idx * 80)
                 win.blit(cardImg, (xVal, yVal))
-        elif os.path.exists("images/" + card + ".png"):
-            cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
-            cardImg = pygame.transform.scale(cardImg, (70, 40))
-            yVal = rect.y + 5
-            xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (len(cards) * 80) + (
-                        idx * 80)
-            win.blit(cardImg, (xVal, yVal))
+        else:
+            loadNameStr = card.lower()
+            if os.path.exists("images/card_" + loadNameStr + ".png"):
+                cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
+                cardImg = pygame.transform.scale(cardImg, (70, 40))
+                yVal = rect.y + 5
+                xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (len(cards) * 80) + (
+                            idx * 80)
+                win.blit(cardImg, (xVal, yVal))
 
 
 def display_personal_message(message, cards=[]):
@@ -80,22 +83,25 @@ def display_personal_message(message, cards=[]):
     win.blit(label, [rect.x + (rect.width / 2) - ((label.get_width() + (len(cards) * 80)) / 2),
                      rect.y + (rect.height / 2) - (label.get_height() / 2)])
     for idx, card in enumerate(cards):
-        if isinstance(card,Card):
-            if os.path.exists("images/" + card.name + ".png"):
-                cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
+        if isinstance(card, Card):
+            loadNameStr = (card.name).lower()
+            if os.path.exists("images/card_" + loadNameStr + ".png"):
+                cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
+                cardImg = pygame.transform.scale(cardImg, (70, 40))
+                yVal = rect.y + 5
+                xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (
+                        len(cards) * 80) + (idx * 80)
+                win.blit(cardImg, (xVal, yVal))
+        else:
+            loadNameStr = card.lower()
+            if os.path.exists("images/card_" + loadNameStr + ".png"):
+                cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
                 cardImg = pygame.transform.scale(cardImg, (70, 40))
                 yVal = rect.y + 5
                 xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (
                             len(cards) * 80) + (
                                idx * 80)
                 win.blit(cardImg, (xVal, yVal))
-        elif os.path.exists("images/" + card + ".png"):
-            cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
-            cardImg = pygame.transform.scale(cardImg, (70, 40))
-            yVal = rect.y + 5
-            xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (len(cards) * 80) + (
-                    idx * 80)
-            win.blit(cardImg, (xVal, yVal))
 
 
 def display_buttons():
