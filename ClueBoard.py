@@ -92,8 +92,14 @@ class ClueBoard:
             room.draw(window)
         for player in self.Players:
             player.draw(window)
+        #draw ui to show where cards are placed
+        cardBackground = pygame.image.load('images/cardUI.png')
+        window.blit(cardBackground, (690,40))
         for idx, card in enumerate(self.Cards):
-            cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
-            cardImg = pygame.transform.scale(cardImg, (50,50))
-            yVal = 390 + (idx * 60)
-            window.blit(cardImg, (40,yVal))
+            #the image loads from the name of the card. all cards are in the format: images/card_%NAMEOFCARD%.png ..... eg: card_billiard.png, card_knife.png, card_mustard.png
+            #so the var loadNameStr just needs to contain the name of the character, weapon, or room: eg) billiard, knife, mustard. it is automatically sent to lowercase to match file name
+            loadNameStr = (card.name).lower()
+            cardImg = pygame.image.load(os.path.abspath("images/card_" + loadNameStr + ".png"))
+            cardImg = pygame.transform.scale(cardImg, (70,40))
+            yVal = 82 + (idx * 53)
+            window.blit(cardImg, (695,yVal))
