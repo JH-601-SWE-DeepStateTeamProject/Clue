@@ -2,7 +2,6 @@ import os
 import pygame
 
 from Card import Card
-from InputBox import InputBox
 from clientNetwork import Network
 from Player import Player
 from Map import Map
