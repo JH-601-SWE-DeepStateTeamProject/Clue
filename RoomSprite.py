@@ -221,4 +221,4 @@ class RoomSprite(pygame.sprite.Sprite):
     def draw(self, win):
         win.blit(self.surf, self.rect)
         if (self.label != None):
-            win.blit(self.label, [self.rect.x + (self.rect.width / 2) - (self.label.get_width() / 2), self.rect.y + (self.rect.width / 2) - (self.label.get_height() / 2)])
+            win.blit(self.label, [self.rect.x + (self.rect.width / 2) - (self.label.get_width() / 2), self.rect.y + (self.rect.height / 2) - (self.label.get_height() / 2)])

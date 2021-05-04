@@ -22,11 +22,13 @@ s.listen()
 print("Waiting for a connection, Server Started")
 
 messages = ["turn"]
+personalMessagesCards = [[],[],[],[],[],[]]
 suggestion = []
 answer = []
 playerTurn = 0
 currentDisprover = 1
 outputAllMessage = ""
+outputAllMessageCards = []
 pygame.init()
 Players = []
 hands = [[],[],[],[],[],[]]
@@ -40,6 +42,8 @@ def threaded_client(conn, player):
     global playerTurn
     global currentDisprover
     global outputAllMessage
+    global outputAllMessageCards
+    global personalMessagesCards
     global answer
     global Board
     conn.send(pickle.dumps(player))
@@ -50,7 +54,6 @@ def threaded_client(conn, player):
         try:
             data = pickle.loads(conn.recv(2048))
             reply = ""
-
             if not data:
                 print("Disconnected")
                 break
@@ -58,17 +61,25 @@ def threaded_client(conn, player):
                 reply = Players
             elif data == "get_state":
                 reply = messages[player]
+            elif data == "get_personal_cards":
+                reply = personalMessagesCards[player]
             elif data == "get_suggestion":
                 reply = suggestion
             elif data == "get_message":
                 reply = outputAllMessage
+            elif data == "get_message_cards":
+                reply = outputAllMessageCards
             elif data == "change_turn":
                 movedPlayers[player] = False
                 change_turn(player)
             elif data == "get_player_turn":
                 reply = playerTurn
+            elif data == "get_answer":
+                reply = answer
 
             elif data == "unable_to_disprove":
+                outputAllMessageCards = []
+                outputAllMessage = ""
                 currentDisprover = (currentDisprover + 1) % currentPlayer
                 if currentDisprover == playerTurn:
                     messages[playerTurn] = "unable_to_disprove"
@@ -81,7 +92,10 @@ def threaded_client(conn, player):
 
             elif isinstance(data, Card):
                 if messages[player] == "disprove":
-                    messages[playerTurn] = "disproved with " + data.name
+                    outputAllMessageCards = []
+                    outputAllMessage = ""
+                    personalMessagesCards[playerTurn] = [data.name]
+                    messages[playerTurn] = "disproved"
                     messages[player] = "wait"
                     reply = messages[player]
 
@@ -89,7 +103,7 @@ def threaded_client(conn, player):
                 isSuggestion = data.pop(3)
 
                 if isSuggestion:
-
+                    outputAllMessage = "Player " + str(playerTurn + 1) + " is making a suggestion."
                     suggestion.clear()
                     for card in data:
                         # If the card is a player card, move that player to the current players room.
@@ -97,26 +111,27 @@ def threaded_client(conn, player):
                             Players[playerNames.index(card.name)].room = Players[player].room
                             movedPlayers[playerNames.index(card.name)] = True
                         suggestion.append(card)
+                    outputAllMessageCards = suggestion
                     messages[player] = "suggestion wait"
                     messages[(player + 1) % currentPlayer] = "disprove"
                     reply = messages[player]
                     currentDisprover = (player + 1) % currentPlayer
                 else:
                     if data[0].name == answer[0].name and data[1].name == answer[1].name and data[2].name == answer[2].name:
-                        outputAllMessage = "Player " + str(playerTurn + 1) + " wins!"
+                        outputAllMessage = "Player " + str(playerTurn + 1) + " wins! Answer is: "
                         for i in range(len(messages)):
                             messages[i] = "game_over"
-                        reply = answer
-                        reply.insert(0, True)
+                        outputAllMessageCards = answer
+                        reply = True
                     else:
                         incorrectGuess.clear()
                         for card in data:
                             incorrectGuess.append(card)
-                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses."
+                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed: "
+                        outputAllMessageCards = incorrectGuess
                         messages[player] = "guessed_wrong"
                         change_turn(player)
-                        reply = answer
-                        reply.insert(0, False)
+                        reply = False
 
             elif isinstance(data[0], Player):
                 Players[player].room = data[0].room
@@ -169,14 +184,13 @@ def assign_cards_to_role():
     answer.append(rooms.pop())
     for i in hands:
         i.clear()
-    deck = weapons #+ people + rooms
+    deck = weapons + people + rooms
     random.shuffle(deck)
     for i in range(len(deck)):
         if currentPlayer != 0:
             hands[i % currentPlayer].append(deck[i])
     for i in range(currentPlayer):
         Players[i].hand = hands[i]
-        print(Players[i].hand)
     for i in answer:
         print(i.name)
 

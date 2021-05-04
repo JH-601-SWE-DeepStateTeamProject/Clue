@@ -93,10 +93,11 @@ class ClueBoard:
         for player in self.Players:
             player.draw(window)
         for idx, card in enumerate(self.Cards):
-            cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
-            cardImg = pygame.transform.scale(cardImg, (50, 50))
-            yVal = 390 + (idx * 60)
-            window.blit(cardImg, (40, yVal))
+            if os.path.exists("images/" + card.name + ".png"):
+                cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
+                cardImg = pygame.transform.scale(cardImg, (50, 50))
+                yVal = 390 + (idx * 60)
+                window.blit(cardImg, (40, yVal))
         for i in range(6):
             if i == self.player_turn:
                 pygame.draw.rect(window, pygame.Color("green"), pygame.Rect(48, 86 + (i * 36), 2, 30))

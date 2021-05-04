@@ -1,3 +1,4 @@
+import os
 import pygame
 
 from Card import Card
@@ -11,16 +12,15 @@ from Button import Button
 pygame.init()
 
 width = 800
-height = 1000
+height = 900
 dimension = 5
 win = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Client")
 map = Map().map
-font = pygame.font.SysFont("monospace", 30)
-output_box = InputBox(50, 900, 700, 48, font)
+font = pygame.font.SysFont("monospace", 20)
 buttonColor = pygame.Color("grey")
 buttonStartX = 25
-buttonStartY = 700
+buttonStartY = 720
 buttonW = 150
 buttonH = 50
 buttons = [Button(buttonColor, buttonStartX, buttonStartY, buttonW, buttonH),
@@ -36,9 +36,67 @@ buttonTitles = ['', '', '', '', '', '', '', '']
 
 def redraw_window(board):
     board.draw(win)
-    display_text_box()
     display_buttons()
     pygame.display.update()
+
+
+def display_outputall_message(message, cards=[]):
+    surf = pygame.Surface((800, 60))
+    surf.fill((0, 0, 0))
+    rect = surf.get_rect()
+    rect.x = 0
+    rect.y = 600
+    label = font.render(message, 1, (255, 255, 255))
+    win.blit(surf, rect)
+    win.blit(label, [rect.x + (rect.width / 2) - ((label.get_width() + (len(cards) * 60)) / 2),
+                     rect.y + (rect.height / 2) - (label.get_height() / 2)])
+
+
+    for idx, card in enumerate(cards):
+        if isinstance(card,Card):
+            if os.path.exists("images/" + card.name + ".png"):
+                cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
+                cardImg = pygame.transform.scale(cardImg, (50, 50))
+                yVal = rect.y + 5
+                xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 60)) / 2)) - (
+                        len(cards) * 60) + (idx * 60)
+                win.blit(cardImg, (xVal, yVal))
+        elif os.path.exists("images/" + card + ".png"):
+            cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
+            cardImg = pygame.transform.scale(cardImg, (50, 50))
+            yVal = rect.y + 5
+            xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 60)) / 2)) - (len(cards) * 60) + (
+                        idx * 60)
+            win.blit(cardImg, (xVal, yVal))
+
+
+def display_personal_message(message, cards=[]):
+    surf = pygame.Surface((800, 60))
+    surf.fill((0, 0, 0))
+    rect = surf.get_rect()
+    rect.x = 0
+    rect.y = 660
+    label = font.render(message, 1, (255, 255, 255))
+    win.blit(surf, rect)
+    win.blit(label, [rect.x + (rect.width / 2) - ((label.get_width() + (len(cards) * 60)) / 2),
+                     rect.y + (rect.height / 2) - (label.get_height() / 2)])
+    for idx, card in enumerate(cards):
+        if isinstance(card,Card):
+            if os.path.exists("images/" + card.name + ".png"):
+                cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
+                cardImg = pygame.transform.scale(cardImg, (50, 50))
+                yVal = rect.y + 5
+                xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 60)) / 2)) - (
+                            len(cards) * 60) + (
+                               idx * 60)
+                win.blit(cardImg, (xVal, yVal))
+        elif os.path.exists("images/" + card + ".png"):
+            cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
+            cardImg = pygame.transform.scale(cardImg, (50, 50))
+            yVal = rect.y + 5
+            xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 60)) / 2)) - (len(cards) * 60) + (
+                    idx * 60)
+            win.blit(cardImg, (xVal, yVal))
 
 
 def display_buttons():
@@ -46,11 +104,6 @@ def display_buttons():
     for i in range(0, len(buttons)):
         buttons[i].setText(buttonTitles[i])
         buttons[i].draw(win)
-
-
-def display_text_box():
-    pygame.draw.rect(win, pygame.Color("white"), pygame.Rect(0, 700, 800, 300))
-    output_box.draw(win)
 
 
 def execute_player_turn():
@@ -79,7 +132,6 @@ def update_board(board):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
-    output_box.update()
     redraw_window(board)
 
 
@@ -257,25 +309,20 @@ def main():
         clear_button_titles(Board)
 
         player_turn = n.send("get_player_turn")
-        print(player_turn)
+        display_outputall_message(n.send("get_message"), n.send("get_message_cards"))
 
         # Pulls the current game state from server i.e. turn/suggestion/disprove. This needs a better way of displaying then current
         message = n.send("get_state")
-        if message != "wait":
-            output_box.text = message
-        elif output_box.text == "turn":
-            output_box.text = ""
         if message == "disprove":
             suggestion = n.send("get_suggestion")
-            output_box.text = "disprove " + suggestion[0].name
+            display_personal_message("Your turn to disprove.")
         elif message == "unable_to_disprove":
-            output_box.text = "unable to disprove"
+            suggestion = n.send("get_suggestion")
+            display_personal_message("Your suggestion was unable to be disproved. ", suggestion)
             n.send("change_turn")
         elif message.startswith("disproved"):
-            output_box.text = message
+            display_personal_message("Your suggestion was disproved with ", n.send("get_personal_cards"))
             n.send("change_turn")
-        elif message == "game_over":
-            output_box.text = n.send("get_message")
 
         # Pulls the current player data from the server, checks for changes and updates the board if needed.
         new_info = get_board_info(n)
@@ -297,6 +344,7 @@ def main():
                     canEnd = True
                 set_button_titles_turn_choice(Board, canMove, canSuggest, canEnd)
             elif message == "suggestion":
+                display_personal_message("")
                 set_button_titles_turn_choice(Board, False, True, True)
             elif message == "end_turn":
                 set_button_titles_turn_choice(Board, False, False, True)
@@ -319,14 +367,12 @@ def main():
             elif buttonInput == "Make Assumption":
                 assumption = get_assumption(Board)
                 answer = check_and_send_card_input(assumption, n, False)
-                if isinstance(answer, list):
-                    if answer[0]:
-                        output_box.text = "Winner"
-                        # Winning stuff here
-                    else:
-                        output_box.text = "Loser"
-                        lost = True
-                        # Losing stuff here
+                if answer:
+                    display_personal_message("You win, answer is: ", n.send("get_answer"))
+                    # Winning stuff here
+                else:
+                    lost = True
+                    display_personal_message("You lost, answer is: ", n.send("get_answer"))
             elif buttonInput == "End Turn":
                 n.send("change_turn")
         elif message == "disprove":
@@ -338,11 +384,11 @@ def main():
                         possibleDisproveCards.append(card.name)
             if len(possibleDisproveCards) == 0:
                 n.send("unable_to_disprove")
-                output_box.text = "unable to disprove " + suggestion[0].name
+                display_personal_message("")
             else:
                 set_button_titles_disproving(Board, possibleDisproveCards)
                 buttonInput = wait_for_button_press(Board)
-
+                display_personal_message("")
                 check_and_send_card_input(Card(buttonInput), n, False)
 
 
