@@ -55,14 +55,14 @@ def display_outputall_message(message, cards=[]):
         if isinstance(card,Card):
             if os.path.exists("images/" + card.name + ".png"):
                 cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
-                cardImg = pygame.transform.scale(cardImg, (40, 70))
+                cardImg = pygame.transform.scale(cardImg, (70, 40))
                 yVal = rect.y + 5
                 xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (
                         len(cards) * 80) + (idx * 80)
                 win.blit(cardImg, (xVal, yVal))
         elif os.path.exists("images/" + card + ".png"):
             cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
-            cardImg = pygame.transform.scale(cardImg, (40, 70))
+            cardImg = pygame.transform.scale(cardImg, (70, 40))
             yVal = rect.y + 5
             xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (len(cards) * 80) + (
                         idx * 80)
@@ -83,7 +83,7 @@ def display_personal_message(message, cards=[]):
         if isinstance(card,Card):
             if os.path.exists("images/" + card.name + ".png"):
                 cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
-                cardImg = pygame.transform.scale(cardImg, (40, 70))
+                cardImg = pygame.transform.scale(cardImg, (70, 40))
                 yVal = rect.y + 5
                 xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (
                             len(cards) * 80) + (
@@ -91,7 +91,7 @@ def display_personal_message(message, cards=[]):
                 win.blit(cardImg, (xVal, yVal))
         elif os.path.exists("images/" + card + ".png"):
             cardImg = pygame.image.load(os.path.abspath("images/" + card.name + ".png"))
-            cardImg = pygame.transform.scale(cardImg, (40, 70))
+            cardImg = pygame.transform.scale(cardImg, (70, 40))
             yVal = rect.y + 5
             xVal = (rect.x + (rect.width / 2) + ((label.get_width() + (len(cards) * 80)) / 2)) - (len(cards) * 80) + (
                     idx * 80)
