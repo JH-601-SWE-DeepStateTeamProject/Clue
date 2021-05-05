@@ -111,16 +111,9 @@ def display_buttons():
         buttons[i].draw(win)
 
 
-def execute_player_turn():
-    print("execute")
-
-
-def notify_player_of_win():
-    print("notify")
-
-
 # Sends text input to the server
 def check_and_send_card_input(cards, n, isSuggestion):
+    print(cards)
     if isinstance(cards, list):
         for i in cards:
             if not isinstance(i, Card):
@@ -259,12 +252,14 @@ def set_button_titles_turn_choice(board, move, suggestion, end_turn):
         titles.append("Make Suggestion")
     if end_turn:
         titles.append("End Turn")
-    titles.append("Make Assumption")
     for i in range(len(buttonTitles)):
         if i < len(titles):
             buttonTitles[i] = titles[i]
+        elif i == 7:
+            buttonTitles[i] = "Make Assumption"
         else:
             buttonTitles[i] = ""
+
     update_board(board)
 
 
@@ -276,11 +271,12 @@ def clear_button_titles(board):
 
 
 def get_suggestion(p, board):
-    suggestion = [Card(board.Players[p].room.capitalize())]
+    suggestion = []
     set_button_titles_weapons(board)
     suggestion.append(Card(wait_for_button_press(board)))
     set_button_titles_players(board)
     suggestion.append(Card(wait_for_button_press(board)))
+    suggestion.append(Card(board.Players[p].room.capitalize()))
     return suggestion
 
 
@@ -324,10 +320,10 @@ def main():
         elif message == "unable_to_disprove":
             suggestion = n.send("get_suggestion")
             display_personal_message("Your suggestion was unable to be disproved. ", suggestion)
-            n.send("change_turn")
-        elif message.startswith("disproved"):
+        elif message == "disproved":
             display_personal_message("Your suggestion was disproved with ", n.send("get_personal_cards"))
-            n.send("change_turn")
+        elif message == "disprove wait":
+            display_personal_message("")
 
         # Pulls the current player data from the server, checks for changes and updates the board if needed.
         new_info = get_board_info(n)
@@ -343,9 +339,10 @@ def main():
             if message == "turn":
                 canSuggest = n.send("was_i_moved")
                 canMove = Board.canIMove(p, firstTurn)
-                if canSuggest or canMove:
+                if canMove:
                     canEnd = False
                 else:
+                    display_personal_message("Unable to move. All possible moves are blocked.")
                     canEnd = True
                 set_button_titles_turn_choice(Board, canMove, canSuggest, canEnd)
             elif message == "suggestion":
@@ -354,18 +351,21 @@ def main():
             elif message == "end_turn":
                 set_button_titles_turn_choice(Board, False, False, True)
             buttonInput = wait_for_button_press(Board)
+            display_personal_message("")
             if buttonInput == "Move":
                 set_button_titles_for_move(p, Board, firstTurn)
                 firstTurn = False
                 buttonInput = wait_for_button_press(Board)
                 if get_player_move(buttonInput, p, Board):
-                    # Checks if in a hallway or not to tell server if it is going to make a suggestion or not. Need a
-                    # better way to do this
+                    display_personal_message("")
+                    # Checks if in a hallway or not to tell server if it is going to make a suggestion or not.
                     if len(Board.Players[p].room) < 4:
                         newMessage = "moved_hall"
                     else:
                         newMessage = "moved_room"
                     n.send([Board.Players[p].create_player_obj(), newMessage])
+                else:
+                    display_personal_message("This hallway is blocked. Please select a different move.")
             elif buttonInput == "Make Suggestion":
                 suggestion = get_suggestion(p, Board)
                 check_and_send_card_input(suggestion, n, True)
@@ -395,6 +395,20 @@ def main():
                 buttonInput = wait_for_button_press(Board)
                 display_personal_message("")
                 check_and_send_card_input(Card(buttonInput), n, False)
+        elif message == "unable_to_disprove" or message == "disproved":
+            set_button_titles_turn_choice(Board, False, False, True)
+            buttonInput = wait_for_button_press(Board)
+            if buttonInput == "Make Assumption":
+                assumption = get_assumption(Board)
+                answer = check_and_send_card_input(assumption, n, False)
+                if answer:
+                    display_personal_message("You win, answer is: ", n.send("get_answer"))
+                    # Winning stuff here
+                else:
+                    lost = True
+                    display_personal_message("You lost, answer is: ", n.send("get_answer"))
+            elif buttonInput == "End Turn":
+                n.send("change_turn")
 
 
 main()

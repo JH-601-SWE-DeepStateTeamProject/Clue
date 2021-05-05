@@ -35,7 +35,6 @@ hands = [[],[],[],[],[],[]]
 movedPlayers = [False, False, False, False, False, False] # Keeps track of players moved by suggestion
 roomNums = [0,2,4,8,10,12,16,18,20]
 playerNames = ['Scarlet', 'Mustard', 'Green', 'Peacock', 'Plum', 'White']
-incorrectGuess = []
 
 
 def threaded_client(conn, player):
@@ -78,22 +77,19 @@ def threaded_client(conn, player):
                 reply = answer
 
             elif data == "unable_to_disprove":
-                outputAllMessageCards = []
-                outputAllMessage = ""
                 currentDisprover = (currentDisprover + 1) % currentPlayer
                 if currentDisprover == playerTurn:
                     messages[playerTurn] = "unable_to_disprove"
-                    messages[player] = "wait"
                 else:
                     messages[currentDisprover] = "disprove"
+                messages[player] = "disprove wait"
 
             elif data == "was_i_moved":
                 reply = movedPlayers[player]
 
             elif isinstance(data, Card):
                 if messages[player] == "disprove":
-                    outputAllMessageCards = []
-                    outputAllMessage = ""
+                    outputAllMessage = "The suggestion was disproved."
                     personalMessagesCards[playerTurn] = [data.name]
                     messages[playerTurn] = "disproved"
                     messages[player] = "wait"
@@ -112,8 +108,11 @@ def threaded_client(conn, player):
                             movedPlayers[playerNames.index(card.name)] = True
                         suggestion.append(card)
                     outputAllMessageCards = suggestion
+                    for i in range(len(messages)):
+                        messages[i] = "disprove wait"
                     messages[player] = "suggestion wait"
                     messages[(player + 1) % currentPlayer] = "disprove"
+                    print(messages)
                     reply = messages[player]
                     currentDisprover = (player + 1) % currentPlayer
                 else:
@@ -124,13 +123,12 @@ def threaded_client(conn, player):
                         outputAllMessageCards = answer
                         reply = True
                     else:
-                        incorrectGuess.clear()
-                        for card in data:
-                            incorrectGuess.append(card)
-                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed: "
-                        outputAllMessageCards = incorrectGuess
-                        messages[player] = "guessed_wrong"
+                        print(data)
                         change_turn(player)
+                        outputAllMessage = "Player " + str(playerTurn + 1) + " loses. Guessed: "
+                        outputAllMessageCards.clear()
+                        for card in data:
+                            outputAllMessageCards.append(card)
                         reply = False
 
             elif isinstance(data[0], Player):
@@ -150,17 +148,15 @@ def threaded_client(conn, player):
 
 def change_turn(playerNum):
     global playerTurn
+    global outputAllMessage
+    outputAllMessageCards.clear()
+    outputAllMessage = ""
+    for i in range(len(messages)):
+        messages[i] = "wait"
     messages[playerNum] = "turn"
     messages.insert(0, messages.pop())
     playerTurn = (playerTurn + 1) % currentPlayer
 
-
-def connect_players():
-    print("connect")
-
-
-def assign_player_roles():
-    print("assign")
 
 def setup_game():
     random.shuffle(roomNums)
@@ -193,27 +189,6 @@ def assign_cards_to_role():
         Players[i].hand = hands[i]
     for i in answer:
         print(i.name)
-
-
-def store_game_state():
-    print("store")
-
-
-def store_player_locations():
-    print("store_player")
-
-
-def player_guess_monitoring():
-    print("monitor")
-
-
-def organize_player_turns():
-    print("organize")
-
-
-def determine_game_winner():
-    print("determine")
-
 
 currentPlayer = 0
 setup_game()
