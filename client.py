@@ -6,7 +6,7 @@ from clientNetwork import Network
 from Player import Player
 from Map import Map
 from ClueBoard import ClueBoard
-from Button import Button
+from Button import Button, MenuButton
 
 pygame.init()
 
@@ -33,8 +33,13 @@ buttons = [Button(buttonColor, buttonStartX, buttonStartY, buttonW, buttonH),
            Button(buttonColor, buttonStartX + 600, buttonStartY + 100, buttonW, buttonH)]
 buttonTitles = ['', '', '', '', '', '', '', '']
 
+menu_btns = [MenuButton("Three Players", 355, 200, (135,206,250)),
+        MenuButton("Four Players", 355, 275, (135,206,250)),
+        MenuButton("Five Players", 355, 350, (135,206,250)),
+        MenuButton("Six Players", 355, 425, (135,206,250))]
 
 def redraw_window(board):
+    win.fill((0,0,0))
     board.draw(win)
     display_text_box()
     display_buttons()
@@ -216,16 +221,76 @@ def get_assumption(board):
     suggestion.append(Card(wait_for_button_press(board)))
     return suggestion
 
+def fullScreen():
+    while True:
+        win.fill((0,0,0))
+        font = pygame.font.SysFont("comicsans", 40)
+        text = font.render("Lobby is full", 1, (255, 255, 255), True)
+        win.blit(text, (width/2 - text.get_width()/2, height/8 - text.get_height()/2))
+
+        pygame.display.update()
+
+def getLimit(n):
+    player_limit = n.send("player_limit")
+
+    if player_limit is None:
+        getLimit(n)
+
+    return player_limit
+
+
+def waitingScreen(p, n):
+    win.fill((0,0,0))
+
+    if p == 0:
+        font = pygame.font.SysFont("comicsans", 40)
+        text = font.render("How Many Players?...", 1, (255, 255, 255), True)
+        win.blit(text, (width/2 - text.get_width()/2, height/8 - text.get_height()/2))
+
+        for btn in menu_btns:
+            btn.draw(win)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                for btn in menu_btns:
+                    if btn.click(pos):
+                        n.send(btn.text)
+                        print(btn.text)
+
+    else:
+        font = pygame.font.SysFont("comicsans", 40)
+        text = font.render("Game not available, please wait...", 1, (255,0,0), True)
+        win.blit(text, (width/2 - text.get_width()/2, height/2 - text.get_height()/2))
+
+    pygame.display.update()
+
+
+
 def main():
     firstTurn = True
     run = True
     n = Network()
     p = n.getP()  # p is the index of the client's player object in the board array
+    clock = pygame.time.Clock()
+
+    while getLimit(n) < 3:
+        clock.tick(60)
+        waitingScreen(p, n)
+
+    if p > getLimit(n) - 1:
+        clock.tick(60)
+        fullScreen()
+
     pygame.display.set_caption("Player " + str(p + 1))
     player_info = get_board_info(n)
     Board = ClueBoard(player_info, p)
-    clock = pygame.time.Clock()
     redraw_window(Board)
+
 
     while run:
         clock.tick(60)
@@ -292,4 +357,26 @@ def main():
             check_and_send_card_input(assumption, n)
 
 
-main()
+def menu_screen():
+    run = True
+    clock = pygame.time.Clock()
+
+    while run:
+        clock.tick(60)
+        win.fill((0, 0, 0))
+        font = pygame.font.SysFont("comicsans", 40)
+        text = font.render("Click to start!", 1, (255, 255, 255), True)
+        win.blit(text, (width/2 - text.get_width()/2, height/8 - text.get_height()/2))
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                run = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                run = False
+
+    main()
+
+while True:
+    menu_screen()

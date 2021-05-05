@@ -32,6 +32,7 @@ Players = []
 hands = [[],[],[],[],[],[]]
 roomNums = [0,2,4,8,10,12,16,18,20]
 playerNames = ['Scarlet', 'Mustard', 'Green', 'Peacock', 'Plum', 'White']
+player_limit = 1
 
 
 def threaded_client(conn, player):
@@ -40,6 +41,7 @@ def threaded_client(conn, player):
     global outputAllMessage
     global answer
     global Board
+    global player_limit
     conn.send(pickle.dumps(player))
     turnCount = 0
     #Should have a seperate while loop here to hold players in a pregame state in order to properly randomize cards/starting positions
@@ -61,6 +63,25 @@ def threaded_client(conn, player):
                 reply = suggestion
             elif data == "get_message":
                 reply = outputAllMessage
+
+            elif data == "player_limit":
+                reply = player_limit
+
+            elif data == "Three Players":
+                player_limit = 3
+                reply = player_limit
+
+            elif data == "Four Players":
+                player_limit = 4
+                reply = player_limit
+
+            elif data == "Five Players":
+                player_limit = 5
+                reply = player_limit
+
+            elif data == "Six Players":
+                player_limit = 6
+                reply = player_limit
 
             elif data == "change_turn":
                 # Used to force assuming currently.
