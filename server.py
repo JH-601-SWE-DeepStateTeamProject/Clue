@@ -77,18 +77,25 @@ def threaded_client(conn, player):
             elif data == "Three Players":
                 player_limit = 3
                 reply = player_limit
+                assign_cards_to_role()
 
             elif data == "Four Players":
                 player_limit = 4
                 reply = player_limit
+                assign_cards_to_role()
 
             elif data == "Five Players":
                 player_limit = 5
                 reply = player_limit
+                assign_cards_to_role()
 
             elif data == "Six Players":
                 player_limit = 6
                 reply = player_limit
+                assign_cards_to_role()
+
+            elif data == "get_amount_players":
+                reply = currentPlayer
 
             elif data == "change_turn":
                 movedPlayers[player] = False
@@ -184,7 +191,6 @@ def setup_game():
     random.shuffle(roomNums)
     for i in range(6):
         Players.append(Player(roomNums[i], i, []))
-    assign_cards_to_role()
 
 
 #Should be run when game is started, randomizes deck, creates the answer and deals the cards
@@ -205,12 +211,9 @@ def assign_cards_to_role():
     deck = weapons + people + rooms
     random.shuffle(deck)
     for i in range(len(deck)):
-        if currentPlayer != 0:
-            hands[i % currentPlayer].append(deck[i])
-    for i in range(currentPlayer):
+        hands[i % player_limit].append(deck[i])
+    for i in range(player_limit):
         Players[i].hand = hands[i]
-    for i in answer:
-        print(i.name)
 
 currentPlayer = 0
 setup_game()
@@ -220,5 +223,4 @@ while True:
     if currentPlayer != 0:
         messages.append("wait")
     currentPlayer += 1
-    assign_cards_to_role()
     start_new_thread(threaded_client, (conn, currentPlayer-1))

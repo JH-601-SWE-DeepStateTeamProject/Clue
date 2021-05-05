@@ -307,11 +307,12 @@ def fullScreen():
 
 def getLimit(n):
     player_limit = n.send("player_limit")
-
-    if player_limit is None:
-        getLimit(n)
-
     return player_limit
+
+
+def getAmountOfPlayers(n):
+    amount_players = n.send("get_amount_players")
+    return amount_players
 
 
 def waitingScreen(p, n):
@@ -327,7 +328,6 @@ def waitingScreen(p, n):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
                 pygame.quit()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -341,8 +341,23 @@ def waitingScreen(p, n):
         font = pygame.font.SysFont("comicsans", 40)
         text = font.render("Game not available, please wait...", 1, (255,0,0), True)
         win.blit(text, (width/2 - text.get_width()/2, height/2 - text.get_height()/2))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
 
     pygame.display.update()
+
+
+def waiting_for_players():
+    win.fill((0,0,0))
+    font = pygame.font.SysFont("comicsans", 40)
+    text = font.render("Waiting for players to join, please wait...", 1, (255, 0, 0), True)
+    win.blit(text, (width / 2 - text.get_width() / 2, height / 2 - text.get_height() / 2))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+    pygame.display.update()
+
 
 def main():
     firstTurn = True
@@ -355,6 +370,10 @@ def main():
     while getLimit(n) < 3:
         clock.tick(60)
         waitingScreen(p, n)
+
+    while getLimit(n) > getAmountOfPlayers(n):
+        clock.tick(60)
+        waiting_for_players()
 
     if p > getLimit(n) - 1:
         clock.tick(60)
