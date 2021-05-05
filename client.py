@@ -38,7 +38,6 @@ menu_btns = [MenuButton("Three Players", 355, 200, (135,206,250)),
         MenuButton("Six Players", 355, 425, (135,206,250))]
 
 def redraw_window(board):
-    win.fill((0,0,0))
     board.draw(win)
     display_buttons()
     pygame.display.update()
@@ -118,7 +117,6 @@ def display_buttons():
 
 # Sends text input to the server
 def check_and_send_card_input(cards, n, isSuggestion):
-    print(cards)
     if isinstance(cards, list):
         for i in cards:
             if not isinstance(i, Card):
@@ -378,6 +376,7 @@ def main():
     if p > getLimit(n) - 1:
         clock.tick(60)
         fullScreen()
+    win.fill((0, 0, 0))
 
     pygame.display.set_caption("Player " + str(p + 1))
     player_info = get_board_info(n)
